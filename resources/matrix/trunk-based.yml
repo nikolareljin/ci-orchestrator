@@ -1,0 +1,36 @@
+# ci-orchestrator Trunk-Based Development strategy
+# Direct pushes to main; feature branches are short-lived
+
+branch_patterns:
+  main: "^(main|master|trunk)$"
+  feature: "^(feature/|feat/)"
+
+rules:
+  - id: "push-to-main"
+    src_branch: null
+    dst_branch: "main"
+    event: "push"
+    tasks: [lint, test, build, deploy]
+    priority: 100
+
+  - id: "feature-open-pr"
+    src_branch: "feature"
+    dst_branch: "main"
+    event: "opened"
+    tasks: [lint, test, build]
+    priority: 90
+
+  - id: "feature-sync"
+    src_branch: "feature"
+    dst_branch: "main"
+    event: "synchronize"
+    tasks: [lint, test, build]
+    priority: 80
+
+  - id: "feature-merged"
+    src_branch: "feature"
+    dst_branch: "main"
+    event: "closed"
+    merged: true
+    tasks: [lint, test, build, deploy]
+    priority: 70

@@ -1,0 +1,499 @@
+# ci-orchestrator default GitFlow branching strategy
+# Converted from GitActionMatrix.groovy (com.dowjones)
+# Rules are evaluated top-to-bottom; first match wins.
+# Priority: higher number = evaluated first
+#
+# Removed WordPress-specific tasks: SATIS_BUILD, S3_UPDATE, SATIS_UPDATE,
+#   PUBLICATION_UPDATE, PR_DEVELOP, PR_MASTER
+# Removed env_dev/env_qa/env_prod publication pipeline rules (PUB-* entries)
+# PR_ENV_DEV → deploy (generic equivalent)
+# BUILD_RELEASE → release
+# CLOSED_PR + merged=true → event: closed, merged: true
+# MERGED → event: closed, merged: true
+# OPEN_PR → event: opened
+# SYNC → event: synchronize
+# NEW → event: new
+# UPDATED → event: updated
+# EDITED → event: edited
+# PUSH → event: push
+# REVIEW_SUBMITTED → event: submitted
+# REVIEW_REQUESTED → event: review_requested
+
+branch_patterns:
+  feature: "^feature/"
+  fix: "^fix/"
+  hotfix: "^hotfix/"
+  sprint: "^sprint/"
+  release: "^release/"
+  develop: "^develop$"
+  master: "^(master|main)$"
+  plugin: "^plugin/"
+  env_dev: "^env_dev$"
+  env_qa: "^env_qa$"
+  env_prod: "^env_prod$"
+
+rules:
+  # ---- Review Submitted (notify only) ----
+
+  - id: "review-release"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "submitted"
+    tasks: [notify]
+    priority: 200
+
+  - id: "review-dev"
+    src_branch: "sprint"
+    dst_branch: "develop"
+    event: "submitted"
+    tasks: [notify]
+    priority: 199
+
+  - id: "review-sprint"
+    src_branch: "feature"
+    dst_branch: "sprint"
+    event: "submitted"
+    tasks: [notify]
+    priority: 198
+
+  # ---- Review Requested (notify only) ----
+
+  - id: "review-request-release"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "review_requested"
+    tasks: [notify]
+    priority: 197
+
+  - id: "review-request-dev"
+    src_branch: "sprint"
+    dst_branch: "develop"
+    event: "review_requested"
+    tasks: [notify]
+    priority: 196
+
+  - id: "review-request-sprint"
+    src_branch: "feature"
+    dst_branch: "sprint"
+    event: "review_requested"
+    tasks: [notify]
+    priority: 195
+
+  # ---- New SPRINT branch created ----
+
+  - id: "new-sprint"
+    src_branch: null
+    dst_branch: "sprint"
+    event: "new"
+    tasks: [test, build, commit, update, deploy]
+    priority: 190
+
+  - id: "new-sprint-2"
+    src_branch: "sprint"
+    dst_branch: "sprint"
+    event: null
+    tasks: [test, build, commit, update, deploy]
+    priority: 189
+
+  - id: "new-sprint-3"
+    src_branch: "sprint"
+    dst_branch: "sprint"
+    event: "new"
+    tasks: [test, build, commit, update, deploy]
+    priority: 188
+
+  # ---- FEATURE -> SPRINT ----
+
+  - id: "feature-sprint-open-pr"
+    src_branch: "feature"
+    dst_branch: "sprint"
+    event: "opened"
+    tasks: [test, build]
+    priority: 185
+
+  - id: "release-sprint-open-pr"
+    src_branch: "release"
+    dst_branch: "sprint"
+    event: "opened"
+    tasks: [test, build]
+    priority: 184
+
+  - id: "feature-sprint-closed-pr"
+    src_branch: "feature"
+    dst_branch: "sprint"
+    event: "closed"
+    merged: true
+    tasks: [test, build, commit, update, deploy]
+    priority: 183
+
+  - id: "feature-sprint-merged"
+    src_branch: "feature"
+    dst_branch: "sprint"
+    event: "closed"
+    merged: true
+    tasks: [test, build, commit, update, deploy]
+    priority: 182
+
+  - id: "sprint-sprint-merged"
+    src_branch: "sprint"
+    dst_branch: "sprint"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit, deploy]
+    priority: 181
+
+  - id: "sprint-sprint-closed"
+    src_branch: "sprint"
+    dst_branch: "sprint"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit, deploy]
+    priority: 180
+
+  - id: "release-sprint-closed"
+    src_branch: "release"
+    dst_branch: "sprint"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit, deploy]
+    priority: 179
+
+  - id: "release-sprint-merged"
+    src_branch: "release"
+    dst_branch: "sprint"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit, deploy]
+    priority: 178
+
+  # ---- EDITED actions ----
+
+  - id: "edited-pr-dev"
+    src_branch: "sprint"
+    dst_branch: "develop"
+    event: "edited"
+    tasks: [test, build]
+    priority: 175
+
+  - id: "edited-sprint-master-pr"
+    src_branch: "sprint"
+    dst_branch: "master"
+    event: "edited"
+    tasks: [test, build]
+    priority: 174
+
+  - id: "edited-release-master-pr"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "edited"
+    tasks: [test, build]
+    priority: 173
+
+  - id: "edited-feature-sprint-pr"
+    src_branch: "feature"
+    dst_branch: "sprint"
+    event: "edited"
+    tasks: [test, build]
+    priority: 172
+
+  # ---- SPRINT -> DEVELOP ----
+
+  - id: "sprint-develop-open-pr"
+    src_branch: "sprint"
+    dst_branch: "develop"
+    event: "opened"
+    tasks: [test, build]
+    priority: 170
+
+  - id: "sprint-develop-sync"
+    src_branch: "sprint"
+    dst_branch: "develop"
+    event: "synchronize"
+    tasks: [test, build]
+    priority: 169
+
+  - id: "sprint-develop-merged"
+    src_branch: "sprint"
+    dst_branch: "develop"
+    event: "closed"
+    merged: true
+    tasks: [test, build]
+    priority: 168
+
+  - id: "sprint-develop-closed-pr"
+    src_branch: "sprint"
+    dst_branch: "develop"
+    event: "closed"
+    merged: true
+    tasks: [build, update, commit, deploy]
+    priority: 167
+
+  - id: "develop-develop-merged"
+    src_branch: "develop"
+    dst_branch: "develop"
+    event: "closed"
+    merged: true
+    tasks: [build, update, commit, deploy]
+    priority: 166
+
+  # ---- FIX -> DEVELOP ----
+
+  - id: "fix-develop-sync"
+    src_branch: "hotfix"
+    dst_branch: "develop"
+    event: "synchronize"
+    tasks: [test, build]
+    priority: 165
+
+  - id: "fix-develop-open-pr"
+    src_branch: "hotfix"
+    dst_branch: "develop"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 164
+
+  - id: "closed-pr-fix-develop"
+    src_branch: "hotfix"
+    dst_branch: "develop"
+    event: "closed"
+    merged: true
+    tasks: [test, build, commit, update, deploy]
+    priority: 163
+
+  # ---- FIX -> MASTER ----
+
+  - id: "fix-master-sync"
+    src_branch: "hotfix"
+    dst_branch: "master"
+    event: "synchronize"
+    tasks: [test, build]
+    priority: 160
+
+  - id: "fix-master-open-pr"
+    src_branch: "hotfix"
+    dst_branch: "master"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 159
+
+  - id: "fix-master-closed-pr"
+    src_branch: "hotfix"
+    dst_branch: "master"
+    event: "closed"
+    merged: true
+    tasks: [test, build, commit, update, tag, deploy]
+    priority: 158
+
+  - id: "closed-pr-fix-master"
+    src_branch: "hotfix"
+    dst_branch: "master"
+    event: "closed"
+    merged: true
+    tasks: [test, build, commit, update, tag, deploy]
+    priority: 157
+
+  # ---- QA / RELEASE branch ----
+
+  - id: "new-release"
+    src_branch: "release"
+    dst_branch: "release"
+    event: null
+    tasks: [test, build, commit, deploy, update]
+    priority: 155
+
+  - id: "new-release-2"
+    src_branch: null
+    dst_branch: "release"
+    event: "new"
+    tasks: [test, build, commit, deploy, update]
+    priority: 154
+
+  - id: "new-release-3"
+    src_branch: "release"
+    dst_branch: "release"
+    event: "new"
+    tasks: [test, build, commit, deploy, update]
+    priority: 153
+
+  - id: "updated-release-1"
+    src_branch: null
+    dst_branch: "release"
+    event: "updated"
+    tasks: [test, build, commit]
+    priority: 152
+
+  - id: "updated-release-2"
+    src_branch: "release"
+    dst_branch: "release"
+    event: "updated"
+    tasks: [test, build, commit]
+    priority: 151
+
+  - id: "sprint-release-open-pr"
+    src_branch: "sprint"
+    dst_branch: "release"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 150
+
+  - id: "sprint-release-closed-pr"
+    src_branch: "sprint"
+    dst_branch: "release"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit, deploy]
+    priority: 149
+
+  - id: "feature-release-closed-pr"
+    src_branch: "feature"
+    dst_branch: "release"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit, deploy]
+    priority: 148
+
+  - id: "feature-release-opened-pr"
+    src_branch: "feature"
+    dst_branch: "release"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 147
+
+  - id: "feature-release-sync-pr"
+    src_branch: "feature"
+    dst_branch: "release"
+    event: "synchronize"
+    tasks: [test, build, update]
+    priority: 146
+
+  - id: "develop-release-closed-pr"
+    src_branch: "develop"
+    dst_branch: "release"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit, deploy]
+    priority: 145
+
+  - id: "develop-release-opened-pr"
+    src_branch: "develop"
+    dst_branch: "release"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 144
+
+  - id: "release-develop-closed-pr"
+    src_branch: "release"
+    dst_branch: "develop"
+    event: "closed"
+    merged: true
+    tasks: [build, update, commit, deploy]
+    priority: 143
+
+  - id: "release-develop-opened-pr"
+    src_branch: "release"
+    dst_branch: "develop"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 142
+
+  - id: "release-release-merged"
+    src_branch: "release"
+    dst_branch: "release"
+    event: "closed"
+    merged: true
+    tasks: [test, build, commit, update, deploy]
+    priority: 141
+
+  # ---- SPRINT UPDATED ----
+
+  - id: "updated-sprint-1"
+    src_branch: null
+    dst_branch: "sprint"
+    event: "updated"
+    tasks: [test, build, commit]
+    priority: 140
+
+  - id: "updated-sprint-2"
+    src_branch: "sprint"
+    dst_branch: "sprint"
+    event: "updated"
+    tasks: [test, build, commit]
+    priority: 139
+
+  # ---- RELEASE -> MASTER (PROD) ----
+
+  - id: "release-master-open-pr"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 130
+
+  - id: "release-master-sync-pr"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "synchronize"
+    tasks: [test, build, update]
+    priority: 129
+
+  - id: "release-master-closed-pr"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "closed"
+    merged: true
+    tasks: [build, release, commit, tag, deploy]
+    priority: 128
+
+  # ---- HOTFIX branch lifecycle ----
+
+  - id: "new-fix"
+    src_branch: "hotfix"
+    dst_branch: "hotfix"
+    event: null
+    tasks: [test, build, update]
+    priority: 120
+
+  - id: "new-fix-2"
+    src_branch: null
+    dst_branch: "hotfix"
+    event: "new"
+    tasks: [test, build, commit, update]
+    priority: 119
+
+  - id: "new-fix-3"
+    src_branch: "hotfix"
+    dst_branch: "hotfix"
+    event: "new"
+    tasks: [test, build, commit, update]
+    priority: 118
+
+  - id: "feature-to-fix"
+    src_branch: "feature"
+    dst_branch: "hotfix"
+    event: "closed"
+    merged: true
+    tasks: [test, build, update, commit]
+    priority: 117
+
+  - id: "feature-to-fix-open-pr"
+    src_branch: "feature"
+    dst_branch: "hotfix"
+    event: "opened"
+    tasks: [test, build, update]
+    priority: 116
+
+  - id: "feature-to-fix-sync-pr"
+    src_branch: "feature"
+    dst_branch: "hotfix"
+    event: "synchronize"
+    tasks: [test, build, update]
+    priority: 115
+
+  # ---- Catch-all: feature PR to itself (no-op) ----
+
+  - id: "nothing"
+    src_branch: "feature"
+    dst_branch: "feature"
+    event: "opened"
+    tasks: []
+    priority: 10

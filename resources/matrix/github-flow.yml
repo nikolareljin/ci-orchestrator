@@ -1,0 +1,36 @@
+# ci-orchestrator GitHub Flow branching strategy
+# Simple model: feature branches → main
+
+branch_patterns:
+  feature: "^(feature/|feat/|fix/|bugfix/|hotfix/)"
+  main: "^(main|master)$"
+
+rules:
+  - id: "feature-to-main-open-pr"
+    src_branch: "feature"
+    dst_branch: "main"
+    event: "opened"
+    tasks: [lint, test, build]
+    priority: 100
+
+  - id: "feature-to-main-sync"
+    src_branch: "feature"
+    dst_branch: "main"
+    event: "synchronize"
+    tasks: [lint, test, build]
+    priority: 90
+
+  - id: "feature-to-main-merged"
+    src_branch: "feature"
+    dst_branch: "main"
+    event: "closed"
+    merged: true
+    tasks: [lint, test, build, tag, deploy]
+    priority: 80
+
+  - id: "new-feature-branch"
+    src_branch: null
+    dst_branch: "feature"
+    event: "new"
+    tasks: [notify]
+    priority: 70

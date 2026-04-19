@@ -24,7 +24,7 @@ class MatrixEvaluator implements Serializable {
     String classifyBranch(String branchName) {
         if (!branchName) return ""
         for (Map.Entry<String, String> entry : branchPatterns.entrySet()) {
-            if (branchName.matches(entry.value)) {
+            if (java.util.regex.Pattern.compile(entry.value).matcher(branchName).find()) {
                 return entry.key
             }
         }

@@ -9,9 +9,12 @@ repositories {
 
 dependencies {
     implementation 'org.codehaus.groovy:groovy-all:3.0.19'
+    implementation 'org.codehaus.groovy:groovy-yaml:3.0.19'
     testImplementation 'com.lesfurets:jenkins-pipeline-unit:1.23'
     testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
     testImplementation 'org.codehaus.groovy:groovy-all:3.0.19'
+    testImplementation 'org.codehaus.groovy:groovy-yaml:3.0.19'
+    // @NonCPS stub is provided in tests/unit/stubs/com/cloudbees/groovy/cps/NonCPS.groovy
 }
 
 test {
@@ -22,10 +25,16 @@ test {
     }
 }
 
+// Repo-root resources/ and local resources/ both contain matrix/.gitkeep; prefer first entry.
+tasks.processTestResources {
+    duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+}
+
 sourceSets {
     main {
         groovy {
-            srcDirs = ["${rootDir}/../../src"]
+            // project source + stubs needed to compile Jenkins annotations without the CPS runtime
+            srcDirs = ["${rootDir}/src", 'stubs']
         }
     }
     test {
@@ -33,7 +42,8 @@ sourceSets {
             srcDirs = ['groovy']
         }
         resources {
-            srcDirs = ['resources']
+            // test-local resources + repo-root resources/ for MatrixLoader classpath lookup
+            srcDirs = ['resources', "${rootDir}/resources"]
         }
     }
 }

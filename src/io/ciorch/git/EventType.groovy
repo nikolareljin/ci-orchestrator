@@ -48,7 +48,7 @@ class EventType implements Serializable {
     static final String COMMENTED = 'commented'
 
     // Push events
-    static final String PUSH = 'PUSH'
+    static final String PUSH = 'push'
     static final String FORCED_PUSH = 'forced_push'
     static final String TAGGED = 'tagged'
 

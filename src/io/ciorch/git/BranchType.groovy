@@ -31,12 +31,12 @@ class BranchType implements Serializable {
     // Tmp branch. Will be moved to MASTER later on.
     static final String PRODUCTION = 'production'
 
-    // Publication branch names (used only for the publication repo)
+    // Environment-specific branch types (dev, qa, prod long-lived branches)
     static final String ENV_DEV = 'env_dev'
     static final String ENV_QA = 'env_qa'
     static final String ENV_PROD = 'env_prod'
 
-    // Tmp PLUGIN branch type. Used to create PRs into ENV_* on Publication
+    // Plugin/extension branch type
     static final String PLUGIN = 'plugin'
 
     // ********************************************

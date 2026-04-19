@@ -1,5 +1,4 @@
 # ci-orchestrator default GitFlow branching strategy
-# Converted from GitActionMatrix.groovy (com.dowjones)
 # Rules are evaluated top-to-bottom; first match wins.
 # Priority: higher number = evaluated first
 #

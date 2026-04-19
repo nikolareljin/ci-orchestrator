@@ -1,9 +1,7 @@
 #!groovy
 /*
 WebhookParser — parses a GitHub webhook JSON payload into structured fields.
-
-Ported from a private Payload class; all publication-specific and
-organisation-specific logic has been removed.
+Supports pull_request, push, create (tag), and release events.
 */
 package io.ciorch.git
 
@@ -1135,7 +1133,7 @@ class WebhookParser implements Serializable {
             if (branchName.contains('release/') || branchName.contains('hotfix/')) {
                 values = branchName.split(/\//)
                 // release/X.Y.Z  → index 1
-                // release/PUB/X.Y.Z is not handled here (no publication concept)
+                // only two-segment release/X.Y.Z format is supported
                 int valueIndex = 1
                 if (values.length > valueIndex && values[valueIndex]) {
                     versionVal = values[valueIndex] as String

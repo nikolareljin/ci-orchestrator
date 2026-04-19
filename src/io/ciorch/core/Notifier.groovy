@@ -62,10 +62,12 @@ class Notifier implements Serializable {
         if (!webhookUrl) return
         try {
             String json = JsonOutput.toJson(payload)
-            context?.sh(
-                script: "curl -s -X POST '${webhookUrl}' -H 'Content-Type: application/json' -d '${json}' > /dev/null",
-                returnStatus: true
-            )
+            context?.withEnv(["CIORCH_WEBHOOK_URL=${webhookUrl}", "CIORCH_WEBHOOK_BODY=${json}"]) {
+                context?.sh(
+                    script: 'curl -s -X POST "$CIORCH_WEBHOOK_URL" -H "Content-Type: application/json" -d "$CIORCH_WEBHOOK_BODY" > /dev/null',
+                    returnStatus: true
+                )
+            }
         } catch (Exception ex) {
             log("Notifier: webhook failed: ${ex.message}", WARN)
         }

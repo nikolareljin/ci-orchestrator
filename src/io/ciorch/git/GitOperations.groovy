@@ -46,10 +46,9 @@ class GitOperations implements Serializable {
 
     // Commit staged changes
     boolean commit(String message) {
-        def result = system.git_command(
-            "git commit -m '${message}'",
-            SystemCall.SHOW_COMMAND_STATUS_VALUE
-        )
+        def result = context?.withEnv(["CIORCH_COMMIT_MSG=${message}"]) {
+            system.git_command('git commit -m "$CIORCH_COMMIT_MSG"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        }
         return result == 0
     }
 
@@ -65,8 +64,15 @@ class GitOperations implements Serializable {
 
     // Create and push a tag
     boolean tag(String tagName, String message = "") {
-        String msgArg = message ? "-a ${tagName} -m '${message}'" : tagName
-        system.git_command("git tag ${msgArg}", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (message) {
+            context?.withEnv(["CIORCH_TAG_NAME=${tagName}", "CIORCH_TAG_MSG=${message}"]) {
+                system.git_command('git tag -a "$CIORCH_TAG_NAME" -m "$CIORCH_TAG_MSG"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            }
+        } else {
+            context?.withEnv(["CIORCH_TAG_NAME=${tagName}"]) {
+                system.git_command('git tag "$CIORCH_TAG_NAME"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            }
+        }
         return push("origin", "refs/tags/${tagName}")
     }
 
@@ -99,13 +105,17 @@ class GitOperations implements Serializable {
     // Generic GitHub API POST
     private Map _githubApiPost(String url, Map payload) {
         String json = JsonOutput.toJson(payload)
-        String command = "curl -s -u ${apiUser}:${apiToken} -X POST '${url}' -H 'Content-Type: application/json' -d '${json}'"
-        String truncated = "curl -s -u ${apiUser}:[REDACTED] -X POST '${url}' ..."
-        String result = system.run_command_with_secrets(command, truncated, SystemCall.SHOW_COMMAND_OUTPUT) as String
+        String result = ""
         try {
+            context?.withEnv(["CIORCH_GH_TOKEN=${apiToken}", "CIORCH_GH_USER=${apiUser}", "CIORCH_GH_URL=${url}", "CIORCH_GH_BODY=${json}"]) {
+                result = context?.sh(
+                    script: 'curl -s -u "$CIORCH_GH_USER:$CIORCH_GH_TOKEN" -X POST "$CIORCH_GH_URL" -H "Content-Type: application/json" -d "$CIORCH_GH_BODY"',
+                    returnStdout: true
+                )?.trim() ?: ""
+            }
             return new JsonSlurper().parseText(result) as Map
         } catch (Exception ex) {
-            context?.echo("GitOperations: API response parse failed: ${ex.message}")
+            context?.echo("GitOperations: API request failed: ${ex.message}")
             return [:]
         }
     }

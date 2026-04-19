@@ -105,6 +105,7 @@ class Config implements Serializable {
         Map notify = (ciorch.notify ?: [:]) as Map
         Map slack = (notify.slack ?: [:]) as Map
         slackChannel = (slack.channel ?: "") as String
+        slackToken = (slack.token ?: "") as String
 
         Map security = (ciorch.security ?: [:]) as Map
         sastEnabled = (security.sast ?: false) as boolean

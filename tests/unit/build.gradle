@@ -1,0 +1,39 @@
+plugins {
+    id 'groovy'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.jenkins-ci.org/public/' }
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:3.0.19'
+    testImplementation 'com.lesfurets:jenkins-pipeline-unit:1.23'
+    testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
+    testImplementation 'org.codehaus.groovy:groovy-all:3.0.19'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+    }
+}
+
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ["${rootDir}/../../src"]
+        }
+    }
+    test {
+        groovy {
+            srcDirs = ['groovy']
+        }
+        resources {
+            srcDirs = ['resources']
+        }
+    }
+}

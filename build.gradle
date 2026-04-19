@@ -1,0 +1,4 @@
+allprojects {
+    group = 'io.ciorch'
+    version = '0.1.0'
+}

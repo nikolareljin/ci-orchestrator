@@ -40,7 +40,7 @@ class PipelineOrchestrator implements Serializable {
     boolean process(String payloadJson, String apiToken = "", String apiUser = "") {
         Map json = null
         try {
-            json = new groovy.json.JsonSlurper().parseText(payloadJson) as Map
+            json = new groovy.json.JsonSlurperClassic().parseText(payloadJson) as Map
         } catch (Exception ex) {
             notifier.log("PipelineOrchestrator: failed to parse payload: ${ex.message}", Notifier.ERROR)
             return false

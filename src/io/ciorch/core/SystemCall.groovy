@@ -82,14 +82,15 @@ class SystemCall implements Serializable {
                     )
                     break
                 case SHOW_COMMAND_SUCCESS:
-                    command_result = this.job.sh(
+                    int exitCode = this.job.sh(
                         script: "${command}" as String,
-                        returnStdout: true,
                         returnStatus: true
-                    ) as String
-                    if (command_result != "0") {
+                    )
+                    if (exitCode != 0) {
                         command_result = null
                         this.job.error "Command failed: ${command}"
+                    } else {
+                        command_result = exitCode
                     }
                     break
                 case SHOW_COMMAND_OUTPUT:
@@ -108,6 +109,7 @@ class SystemCall implements Serializable {
             this.job.echo "Elapsed time: ${elapsedTime} ms"
             this.job.echo "Result: ${command_result}"
 
+            // Post-execution warning only; use Jenkins timeout() step to enforce hard limits
             if (elapsedTime > timeout * 1000) {
                 this.job.error "Command timeout: ${command}"
             }
@@ -147,14 +149,15 @@ class SystemCall implements Serializable {
                     )
                     break
                 case SHOW_COMMAND_SUCCESS:
-                    command_result = this.job.sh(
+                    int exitCode = this.job.sh(
                         script: "${command}" as String,
-                        returnStdout: true,
                         returnStatus: true
-                    ) as String
-                    if (command_result != "0") {
+                    )
+                    if (exitCode != 0) {
                         command_result = null
                         this.job.error "Command failed: ${truncated_command}"
+                    } else {
+                        command_result = exitCode
                     }
                     break
                 case SHOW_COMMAND_OUTPUT:
@@ -264,20 +267,17 @@ class SystemCall implements Serializable {
      *                 (serialised to JSON automatically)
      */
     def curl_request(endpoint, data) {
-        String json_data
+        String json_data = ""
         if (data instanceof String) {
             json_data = data.toString()
         } else {
             json_data = JsonOutput.toJson(data)
         }
 
-        this.job.echo "*** SEND data: ${json_data} to endpoint: ${endpoint}"
-        def result = this.job.sh(
-            script: "curl -u ${this.githubUser}:${this.githubToken} -s '${endpoint.toString()}' -H 'Content-Type: application/json' -X POST -d '${json_data}';",
-            returnStatus: true
-        )
-        this.job.echo "*** RESULT: ${result}"
-        result = null
+        String command = "curl -u ${this.githubUser}:${this.githubToken} -s '${endpoint.toString()}' -H 'Content-Type: application/json' -X POST -d '${json_data}'"
+        String truncated = "curl -u ${this.githubUser}:[REDACTED] -s '${endpoint.toString()}' -H 'Content-Type: application/json' -X POST -d '${json_data}'"
+
+        run_command_with_secrets(command, truncated, SHOW_COMMAND_STATUS_VALUE)
     }
 
     // -------------------------------------------------------------------------

@@ -83,7 +83,7 @@ class Version implements Serializable {
                 text = text.replace('v', '').replace('V', '')
             }
 
-            String[] values = (text instanceof String && null != text) ? text.split(/\./) : new String[0]
+            String[] values = text.split(/\./)
 
             int maj = 0
             int min = 0
@@ -269,11 +269,7 @@ class Version implements Serializable {
         } else if (v2.minor > v1.minor) {
             return -2
         } else {
-            if (null != patchVal_v1 && null != patchVal_v2) {
-                return patchVal_v1 > patchVal_v2 ? 3 : -3
-            } else {
-                return v1.patch > v2.patch ? 3 : -3
-            }
+            return (patchVal_v1 > patchVal_v2) ? 3 : -3
         }
     }
 
@@ -300,11 +296,7 @@ class Version implements Serializable {
         } else if (el.minor > this.minor) {
             resultValue = -2
         } else {
-            if (null != patchVal_this && null != patchVal_el) {
-                resultValue = patchVal_this > patchVal_el ? 3 : -3
-            } else {
-                resultValue = this.patch > el.patch ? 3 : -3
-            }
+            resultValue = (patchVal_this > patchVal_el) ? 3 : -3
         }
 
         return resultValue
@@ -326,7 +318,7 @@ class Version implements Serializable {
         String version = Version.getCleanNumber(versionValue)
 
         // X.Y.Z format
-        def parser = /(?<major>\d+).(?<minor>\d+).(?<patch>\d+)/
+        def parser = /(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)/
         def match = version =~ parser
         if (match.matches()) {
             isFound = true
@@ -334,7 +326,7 @@ class Version implements Serializable {
 
         if (allowNonSemver) {
             // X.Y format
-            parser = /(?<major>\d+).(?<minor>\d+)/
+            parser = /(?<major>\d+)\.(?<minor>\d+)/
             match = version =~ parser
             if (match.matches() && !isFound) {
                 isFound = true

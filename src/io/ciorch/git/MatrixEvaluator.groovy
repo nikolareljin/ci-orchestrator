@@ -38,8 +38,12 @@ class MatrixEvaluator implements Serializable {
         String srcType = srcBranch ? classifyBranch(srcBranch) : null
 
         List<Map> matches = rules.findAll { Map rule ->
-            boolean dstMatch = (rule.dst_branch == null || rule.dst_branch == dstType || rule.dst_branch == dstBranch)
-            boolean srcMatch = (rule.src_branch == null || rule.src_branch == srcType || rule.src_branch == srcBranch)
+            // Normalize YAML string "null" to actual null
+            def ruleSrc = (rule.src_branch == "null") ? null : rule.src_branch
+            def ruleDst = (rule.dst_branch == "null") ? null : rule.dst_branch
+
+            boolean dstMatch = (ruleDst == null || ruleDst == dstType || ruleDst == dstBranch)
+            boolean srcMatch = (ruleSrc == null || ruleSrc == srcType || ruleSrc == srcBranch)
             boolean eventMatch = (rule.event == null || rule.event == event)
             boolean mergedMatch = (!rule.containsKey('merged') || rule.merged == merged)
             return dstMatch && srcMatch && eventMatch && mergedMatch

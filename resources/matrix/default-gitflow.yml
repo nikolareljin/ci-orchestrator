@@ -126,14 +126,6 @@ rules:
     tasks: [test, build, commit, update, deploy]
     priority: 183
 
-  - id: "feature-sprint-merged"
-    src_branch: "feature"
-    dst_branch: "sprint"
-    event: "closed"
-    merged: true
-    tasks: [test, build, commit, update, deploy]
-    priority: 182
-
   - id: "sprint-sprint-merged"
     src_branch: "sprint"
     dst_branch: "sprint"
@@ -142,14 +134,6 @@ rules:
     tasks: [test, build, update, commit, deploy]
     priority: 181
 
-  - id: "sprint-sprint-closed"
-    src_branch: "sprint"
-    dst_branch: "sprint"
-    event: "closed"
-    merged: true
-    tasks: [test, build, update, commit, deploy]
-    priority: 180
-
   - id: "release-sprint-closed"
     src_branch: "release"
     dst_branch: "sprint"
@@ -157,14 +141,6 @@ rules:
     merged: true
     tasks: [test, build, update, commit, deploy]
     priority: 179
-
-  - id: "release-sprint-merged"
-    src_branch: "release"
-    dst_branch: "sprint"
-    event: "closed"
-    merged: true
-    tasks: [test, build, update, commit, deploy]
-    priority: 178
 
   # ---- EDITED actions ----
 
@@ -283,14 +259,6 @@ rules:
     merged: true
     tasks: [test, build, commit, update, tag, deploy]
     priority: 158
-
-  - id: "closed-pr-fix-master"
-    src_branch: "hotfix"
-    dst_branch: "master"
-    event: "closed"
-    merged: true
-    tasks: [test, build, commit, update, tag, deploy]
-    priority: 157
 
   # ---- QA / RELEASE branch ----
 

@@ -53,8 +53,8 @@ class MatrixLoader implements Serializable {
         // Merge branch_patterns: custom overrides builtin
         result.branch_patterns = (builtin.branch_patterns ?: [:]) + (custom.branch_patterns ?: [:])
         // Merge rules: custom rules replace builtin rules with same id
-        Map builtinById = ((builtin.rules ?: []) as List).collectEntries { [(it.id): it] }
-        Map customById = ((custom.rules ?: []) as List).collectEntries { [(it.id): it] }
+        Map builtinById = ((builtin.rules ?: []) as List).collectEntries(new LinkedHashMap()) { [(it.id): it] }
+        Map customById = ((custom.rules ?: []) as List).collectEntries(new LinkedHashMap()) { [(it.id): it] }
         builtinById.putAll(customById)
         result.rules = builtinById.values().toList()
         return result

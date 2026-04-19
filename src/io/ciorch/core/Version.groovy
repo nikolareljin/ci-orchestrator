@@ -307,12 +307,7 @@ class Version implements Serializable {
             }
         }
 
-        if (resultValue > 0) {
-            return true
-        } else if (resultValue < 0) {
-            return false
-        }
-        return null
+        return resultValue
     }
 
     /**
@@ -361,29 +356,22 @@ class Version implements Serializable {
      * @param startArray list of version strings
      * @return sorted list (ascending)
      */
-    static ArrayList sort(ArrayList<String> startArray) {
-        ArrayList<String> list = startArray
-
-        String max = null
-        String tmp = "0.0.0"
-
+    public static ArrayList sort(ArrayList<String> startArray) {
+        ArrayList<String> list = new ArrayList<>(startArray)
         int count = list.size()
-
         for (int i = 0; i < count - 1; i++) {
-            max = list[i]
-
-            for (int j = 0; j < count; j++) {
-                if (i != j) {
-                    int cmp = Version.compare(list[j], max)
-                    if (cmp < 0) {
-                        tmp = max
-                        max = list[j]
-                        list[j] = tmp
-                    }
+            int minIdx = i
+            for (int j = i + 1; j < count; j++) {
+                if (Version.compare(list[j], list[minIdx]) < 0) {
+                    minIdx = j
                 }
             }
+            if (minIdx != i) {
+                String tmp = list[i]
+                list[i] = list[minIdx]
+                list[minIdx] = tmp
+            }
         }
-
         return list
     }
 }

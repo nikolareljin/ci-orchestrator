@@ -512,6 +512,7 @@ class WebhookParser implements Serializable {
      * @param gitUser           login from the GitHub payload
      * @return resolved username
      */
+    @NonCPS
     private String getRealGitCommitter(String gitMessageContent, String gitUser) {
         def match = (gitMessageContent =~ /PR:\s.*,\sBy:\s\[([^\]]+)\]/)
         if (match.find()) {
@@ -540,6 +541,8 @@ class WebhookParser implements Serializable {
                 def login = user.get("login")
                 if (null != login) {
                     String userFromMessage = this.getRealGitCommitter(this.gitMessage as String, login as String)
+                    this.openedByName = userFromMessage
+                    this.triggeredBy = userFromMessage
                     return userFromMessage as String
                 }
             }
@@ -569,6 +572,8 @@ class WebhookParser implements Serializable {
                 }
                 def login = merged_by.get("login")
                 if (null != login) {
+                    this.mergedByName = login as String
+                    this.triggeredBy = login as String
                     this.actionType = EventType.MERGED
                     this.isMerged = true
                     return login as String
@@ -815,7 +820,7 @@ class WebhookParser implements Serializable {
                 }
             } else {
                 if (null != commits && '' != commits) {
-                    def timestamp = commits.timestamp
+                    def timestamp = commits?.getAt(0)?.timestamp
                     if (null != timestamp && '' != timestamp) {
                         this.created_at = timestamp as String
                     }
@@ -997,6 +1002,7 @@ class WebhookParser implements Serializable {
      * @param branchName the full or short branch name
      * @return matching BranchType constant string
      */
+    @NonCPS
     public String getBranchType(String branchName) {
         String branchPrefix = ""
 
@@ -1113,6 +1119,7 @@ class WebhookParser implements Serializable {
      * @param branchVal branch name to inspect; defaults to srcBranch
      * @return version string, or {@code "0.0.0"} when none is found
      */
+    @NonCPS
     public String getVersionFromBranch(String branchVal = "") {
         String branchName = ("" != branchVal) ? branchVal : (String) this.srcBranch as String
 
@@ -1160,7 +1167,9 @@ class WebhookParser implements Serializable {
 
         if (null == head_commit) {
             if (null != pull_request) {
-                message = (String) pull_request.title + " - " + (String) pull_request.body
+                String title = pull_request.title ? pull_request.title as String : ""
+                String body = pull_request.body ? pull_request.body as String : ""
+                message = body ? "${title} - ${body}" : title
             }
         } else {
             def message_2 = head_commit.message

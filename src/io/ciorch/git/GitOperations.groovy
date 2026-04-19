@@ -32,15 +32,26 @@ class GitOperations implements Serializable {
 
     // Clone a repository
     boolean clone(String repoUrl, String branch, String targetDir) {
-        String command = "git clone -b ${branch} ${repoUrl} ${targetDir}"
-        def result = system.run_command(command, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = null
+        context?.withEnv(["CIORCH_CLONE_URL=${repoUrl}", "CIORCH_CLONE_BRANCH=${branch}", "CIORCH_CLONE_DIR=${targetDir}"]) {
+            result = system.run_command(
+                'git clone -b "$CIORCH_CLONE_BRANCH" "$CIORCH_CLONE_URL" "$CIORCH_CLONE_DIR"',
+                SystemCall.SHOW_COMMAND_STATUS_VALUE
+            )
+        }
         return result == 0
     }
 
     // Checkout a branch
     boolean checkout(String branch, boolean create = false) {
-        String flag = create ? "-b " : ""
-        def result = system.git_command("git checkout ${flag}${branch}", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = null
+        String flag = create ? "-b" : ""
+        context?.withEnv(["CIORCH_CHECKOUT_BRANCH=${branch}", "CIORCH_CHECKOUT_FLAG=${flag}"]) {
+            result = system.git_command(
+                'git checkout $CIORCH_CHECKOUT_FLAG "$CIORCH_CHECKOUT_BRANCH"'.trim(),
+                SystemCall.SHOW_COMMAND_STATUS_VALUE
+            )
+        }
         return result == 0
     }
 
@@ -64,15 +75,17 @@ class GitOperations implements Serializable {
 
     // Create and push a tag
     boolean tag(String tagName, String message = "") {
+        def tagResult = null
         if (message) {
             context?.withEnv(["CIORCH_TAG_NAME=${tagName}", "CIORCH_TAG_MSG=${message}"]) {
-                system.git_command('git tag -a "$CIORCH_TAG_NAME" -m "$CIORCH_TAG_MSG"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                tagResult = system.git_command('git tag -a "$CIORCH_TAG_NAME" -m "$CIORCH_TAG_MSG"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
             }
         } else {
             context?.withEnv(["CIORCH_TAG_NAME=${tagName}"]) {
-                system.git_command('git tag "$CIORCH_TAG_NAME"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                tagResult = system.git_command('git tag "$CIORCH_TAG_NAME"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
             }
         }
+        if (tagResult != 0) return false
         return push("origin", "refs/tags/${tagName}")
     }
 
@@ -113,7 +126,7 @@ class GitOperations implements Serializable {
                     returnStdout: true
                 )?.trim() ?: ""
             }
-            return new JsonSlurper().parseText(result) as Map
+            return new groovy.json.JsonSlurperClassic().parseText(result) as Map
         } catch (Exception ex) {
             context?.echo("GitOperations: API request failed: ${ex.message}")
             return [:]

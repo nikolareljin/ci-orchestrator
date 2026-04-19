@@ -274,10 +274,19 @@ class SystemCall implements Serializable {
             json_data = JsonOutput.toJson(data)
         }
 
-        String command = "curl -u ${this.githubUser}:${this.githubToken} -s '${endpoint.toString()}' -H 'Content-Type: application/json' -X POST -d '${json_data}'"
-        String truncated = "curl -u ${this.githubUser}:[REDACTED] -s '${endpoint.toString()}' -H 'Content-Type: application/json' -X POST -d '${json_data}'"
-
-        run_command_with_secrets(command, truncated, SHOW_COMMAND_STATUS_VALUE)
+        String truncated = "curl -u ${this.githubUser}:[REDACTED] -s '${endpoint.toString()}' ... -d '[body]'"
+        this.job.withEnv([
+            "CIORCH_CURL_USER=${this.githubUser}",
+            "CIORCH_CURL_TOKEN=${this.githubToken}",
+            "CIORCH_CURL_URL=${endpoint.toString()}",
+            "CIORCH_CURL_BODY=${json_data}"
+        ]) {
+            run_command_with_secrets(
+                'curl -u "$CIORCH_CURL_USER:$CIORCH_CURL_TOKEN" -s "$CIORCH_CURL_URL" -H \'Content-Type: application/json\' -X POST -d "$CIORCH_CURL_BODY"',
+                truncated,
+                SHOW_COMMAND_STATUS_VALUE
+            )
+        }
     }
 
     // -------------------------------------------------------------------------

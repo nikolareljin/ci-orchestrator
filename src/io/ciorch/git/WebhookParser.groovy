@@ -1068,8 +1068,6 @@ class WebhookParser implements Serializable {
                 }
             }
         } else {
-            this.context.echo "*** Analyze branch name: ${branchName} ***"
-
             switch (branchName) {
                 case "production":
                 case "master":

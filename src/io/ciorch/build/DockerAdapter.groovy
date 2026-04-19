@@ -130,13 +130,14 @@ class DockerAdapter implements BuildAdapter {
             context?.echo("DockerAdapter: no registry configured, skipping login")
             return true
         }
+        def result = null
         context?.withEnv(["CIORCH_REGISTRY=${registry}"]) {
-            def result = system.run_command(
+            result = system.run_command(
                 'docker login "$CIORCH_REGISTRY" -u "$REGISTRY_USER" -p "$REGISTRY_TOKEN"',
                 SystemCall.SHOW_COMMAND_STATUS_VALUE
             )
-            return result == 0
         }
+        return result == 0
     }
 
     @Override

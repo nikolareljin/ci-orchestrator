@@ -18,11 +18,11 @@ class PipelineOrchestrator implements Serializable {
     SystemCall system = null
     GitOperations gitOps = null
 
-    // Adapter registry: id → class
-    private static final Map<String, Class> BUILD_REGISTRY = [
+    // Adapter registry: id → class (ConcurrentHashMap for parallel-pipeline safety)
+    private static final Map<String, Class> BUILD_REGISTRY = new java.util.concurrent.ConcurrentHashMap<>([
         docker: DockerAdapter
-    ]
-    private static final Map<String, Class> DEPLOY_REGISTRY = [:]
+    ])
+    private static final Map<String, Class> DEPLOY_REGISTRY = new java.util.concurrent.ConcurrentHashMap<>()
 
     // Runtime state
     GitEvent currentEvent = null
@@ -181,7 +181,7 @@ class PipelineOrchestrator implements Serializable {
         if (!adapterName) return null
         Class adapterClass = DEPLOY_REGISTRY[adapterName]
         if (!adapterClass) return null
-        return adapterClass.newInstance() as DeployAdapter
+        return adapterClass.newInstance(context, system, config) as DeployAdapter
     }
 
     private Map _loadMatrix() {

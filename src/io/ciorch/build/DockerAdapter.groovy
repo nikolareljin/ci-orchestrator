@@ -15,6 +15,8 @@ class DockerAdapter implements BuildAdapter {
     String dockerfile = "Dockerfile"
     String buildContext = "."
 
+    boolean dockerEnabled = false
+
     private List<String> artifacts = []
 
     DockerAdapter(def context, SystemCall system, Config cfg = null) {
@@ -27,8 +29,6 @@ class DockerAdapter implements BuildAdapter {
             this.dockerEnabled = cfg.dockerEnabled
         }
     }
-
-    boolean dockerEnabled = false
 
     @Override
     boolean prepare(Map buildConfig, def ctx) {
@@ -78,12 +78,23 @@ class DockerAdapter implements BuildAdapter {
         context?.echo("DockerAdapter: building ${fullImageRef}")
 
         Map buildArgs = (buildConfig.build_args ?: [:]) as Map
-        String buildArgsStr = buildArgs.collect { k, v -> "--build-arg ${k}=${v}" }.join(" ")
 
-        def result = system.run_command(
-            "docker build -t ${fullImageRef} ${buildArgsStr} -f ${dockerfile} ${buildContext}".trim(),
-            SystemCall.SHOW_COMMAND_STATUS_VALUE
-        )
+        // Build the arg list safely — each value passed via env var to avoid injection
+        List<String> envBindings = ["CIORCH_IMAGE_REF=${fullImageRef}", "CIORCH_DOCKERFILE=${dockerfile}", "CIORCH_BUILD_CTX=${buildContext}"]
+        List<String> argFlags = []
+        buildArgs.eachWithIndex { entry, i ->
+            envBindings << "CIORCH_BUILD_ARG_KEY_${i}=${entry.key}"
+            envBindings << "CIORCH_BUILD_ARG_VAL_${i}=${entry.value}"
+            argFlags << "--build-arg \"\$CIORCH_BUILD_ARG_KEY_${i}=\$CIORCH_BUILD_ARG_VAL_${i}\""
+        }
+        String argFlagsStr = argFlags.join(" ")
+
+        def result = context?.withEnv(envBindings) {
+            system.run_command(
+                "docker build -t \"\$CIORCH_IMAGE_REF\" ${argFlagsStr} -f \"\$CIORCH_DOCKERFILE\" \"\$CIORCH_BUILD_CTX\"",
+                SystemCall.SHOW_COMMAND_STATUS_VALUE
+            )
+        }
 
         if (result == 0) {
             artifacts = [fullImageRef]
@@ -112,19 +123,20 @@ class DockerAdapter implements BuildAdapter {
         return result == 0
     }
 
-    // Login to the registry (requires REGISTRY_USER and REGISTRY_TOKEN env vars to be set)
+    // Requires REGISTRY_USER and REGISTRY_TOKEN to be present in the environment.
+    // Callers should inject these via withCredentials([usernamePassword(...)]) before calling login().
     boolean login() {
         if (!registry) {
             context?.echo("DockerAdapter: no registry configured, skipping login")
             return true
         }
-        def result = context?.withCredentials([]) {
-            system.run_command(
-                'docker login ' + registry + ' -u "$REGISTRY_USER" -p "$REGISTRY_TOKEN"',
+        context?.withEnv(["CIORCH_REGISTRY=${registry}"]) {
+            def result = system.run_command(
+                'docker login "$CIORCH_REGISTRY" -u "$REGISTRY_USER" -p "$REGISTRY_TOKEN"',
                 SystemCall.SHOW_COMMAND_STATUS_VALUE
             )
+            return result == 0
         }
-        return result == 0
     }
 
     @Override

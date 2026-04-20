@@ -9,6 +9,15 @@ import io.ciorch.git.GitOperations
 import io.ciorch.git.TaskType
 import io.ciorch.build.BuildAdapter
 import io.ciorch.build.DockerAdapter
+import io.ciorch.build.adapters.NodeAdapter
+import io.ciorch.build.adapters.GoAdapter
+import io.ciorch.build.adapters.PhpAdapter
+import io.ciorch.build.adapters.PythonAdapter
+import io.ciorch.build.adapters.CSharpAdapter
+import io.ciorch.build.adapters.RustAdapter
+import io.ciorch.build.adapters.CppAdapter
+import io.ciorch.build.adapters.JavaAdapter
+import io.ciorch.build.adapters.GenericAdapter
 import io.ciorch.deploy.DeployAdapter
 
 class PipelineOrchestrator implements Serializable {
@@ -20,7 +29,16 @@ class PipelineOrchestrator implements Serializable {
 
     // Adapter registry: id → class (ConcurrentHashMap for parallel-pipeline safety)
     private static final Map<String, Class> BUILD_REGISTRY = new java.util.concurrent.ConcurrentHashMap<>([
-        docker: DockerAdapter
+        docker:  DockerAdapter,
+        node:    NodeAdapter,
+        go:      GoAdapter,
+        php:     PhpAdapter,
+        python:  PythonAdapter,
+        csharp:  CSharpAdapter,
+        rust:    RustAdapter,
+        cpp:     CppAdapter,
+        java:    JavaAdapter,
+        generic: GenericAdapter
     ])
     private static final Map<String, Class> DEPLOY_REGISTRY = new java.util.concurrent.ConcurrentHashMap<>()
 

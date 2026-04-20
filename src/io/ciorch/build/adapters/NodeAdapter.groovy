@@ -55,7 +55,7 @@ class NodeAdapter implements BuildAdapter {
         context?.withEnv(["CIORCH_LINT_CMD=${lintCmd}"]) {
             result = system.run_command('eval "$CIORCH_LINT_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
-        if (result == null) result = checkResult
+        if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result != 0) {
             context?.echo("NodeAdapter: lint command returned non-zero, skipping (non-fatal)")
@@ -72,7 +72,7 @@ class NodeAdapter implements BuildAdapter {
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
             result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
-        if (result == null) result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -85,7 +85,7 @@ class NodeAdapter implements BuildAdapter {
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
             result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
-        if (result == null) result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             artifacts = ["dist/"]

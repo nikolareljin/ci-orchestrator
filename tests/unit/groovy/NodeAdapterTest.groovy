@@ -110,6 +110,24 @@ class NodeAdapterTest extends Specification {
         result == true
     }
 
+    def "lint() uses custom lintCommand from buildConfig"() {
+        given:
+        def capturedCmd = null
+        def system = mockSystem { String cmd ->
+            capturedCmd = cmd
+            return 0
+        }
+        // null context so withEnv is skipped and the fallback fires with lintCmd directly
+        def adapter = new NodeAdapter(null, system)
+
+        when:
+        boolean result = adapter.lint([lintCommand: 'my-custom-lint'])
+
+        then:
+        result == true
+        capturedCmd == 'my-custom-lint'
+    }
+
     def "test() happy path returns true"() {
         given:
         def system = mockSystem(0)

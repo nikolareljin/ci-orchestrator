@@ -109,7 +109,7 @@ class PhpAdapterTest extends Specification {
         executedCommands.any { it.contains("php -l src/") }
     }
 
-    def "lint() returns true even when lint fails (non-fatal)"() {
+    def "lint() returns false when lint command fails"() {
         given:
         def system = mockSystem(1)
         def adapter = new PhpAdapter(mockContext, system)
@@ -118,7 +118,7 @@ class PhpAdapterTest extends Specification {
         boolean result = adapter.lint([:])
 
         then:
-        result == true
+        result == false
     }
 
     def "test() happy path returns true"() {
@@ -147,14 +147,28 @@ class PhpAdapterTest extends Specification {
 
     def "test() uses custom test_command from buildConfig"() {
         given:
-        def system = mockSystem(0)
-        def adapter = new PhpAdapter(mockContext, system)
+        def capturedCmd = null
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                capturedCmd = cmd
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                capturedCmd = cmd
+                return 0
+            }
+        }
+        // null context so withEnv is skipped and the fallback fires with testCmd directly
+        def adapter = new PhpAdapter(null, system)
 
         when:
         boolean result = adapter.test([test_command: "php artisan test"])
 
         then:
         result == true
+        capturedCmd == 'php artisan test'
     }
 
     def "build() happy path returns true"() {
@@ -183,14 +197,28 @@ class PhpAdapterTest extends Specification {
 
     def "build() uses custom build_command from buildConfig"() {
         given:
-        def system = mockSystem(0)
-        def adapter = new PhpAdapter(mockContext, system)
+        def capturedCmd = null
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                capturedCmd = cmd
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                capturedCmd = cmd
+                return 0
+            }
+        }
+        // null context so withEnv is skipped and the fallback fires with buildCmd directly
+        def adapter = new PhpAdapter(null, system)
 
         when:
         boolean result = adapter.build([build_command: "composer install"])
 
         then:
         result == true
+        capturedCmd == 'composer install'
     }
 
     def "getArtifacts() returns non-empty list after successful build"() {

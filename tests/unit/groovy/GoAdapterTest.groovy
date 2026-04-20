@@ -152,14 +152,28 @@ class GoAdapterTest extends Specification {
 
     def "test() uses custom test_command from buildConfig"() {
         given:
-        def system = mockSystem(0)
-        def adapter = new GoAdapter(mockContext, system)
+        def capturedCmd = null
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                capturedCmd = cmd
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                capturedCmd = cmd
+                return 0
+            }
+        }
+        // null context so withEnv is skipped and the fallback fires with testCmd directly
+        def adapter = new GoAdapter(null, system)
 
         when:
         boolean result = adapter.test([test_command: "go test -v ./..."])
 
         then:
         result == true
+        capturedCmd == 'go test -v ./...'
     }
 
     def "build() happy path returns true"() {
@@ -188,14 +202,28 @@ class GoAdapterTest extends Specification {
 
     def "build() uses custom build_command from buildConfig"() {
         given:
-        def system = mockSystem(0)
-        def adapter = new GoAdapter(mockContext, system)
+        def capturedCmd = null
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                capturedCmd = cmd
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                capturedCmd = cmd
+                return 0
+            }
+        }
+        // null context so withEnv is skipped and the fallback fires with buildCmd directly
+        def adapter = new GoAdapter(null, system)
 
         when:
         boolean result = adapter.build([build_command: "go build -o bin/app ."])
 
         then:
         result == true
+        capturedCmd == 'go build -o bin/app .'
     }
 
     def "getArtifacts() returns non-empty list after successful build"() {

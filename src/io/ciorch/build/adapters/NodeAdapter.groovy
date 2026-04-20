@@ -43,7 +43,7 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
-        String lintCmd = buildConfig.lintCommand ?: "npm run lint"
+        String lintCmd = buildConfig.lint_command ?: buildConfig.lintCommand ?: "npm run lint"
 
         // Check whether the lint script exists in package.json (non-fatal if not available)
         def checkResult = system.run_command(
@@ -58,8 +58,8 @@ class NodeAdapter implements BuildAdapter {
         if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result != 0) {
-            context?.echo("NodeAdapter: lint command returned non-zero, skipping (non-fatal)")
-            return true
+            context?.echo("NodeAdapter: lint failed")
+            return false
         }
         return true
     }

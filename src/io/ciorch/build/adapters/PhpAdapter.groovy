@@ -43,15 +43,15 @@ class PhpAdapter implements BuildAdapter {
         if (phpcsCheck == 0) {
             def result = system.run_command("vendor/bin/phpcs", SystemCall.SHOW_COMMAND_STATUS_VALUE)
             if (result != 0) {
-                context?.echo("PhpAdapter: phpcs returned non-zero, skipping (non-fatal)")
-                return true
+                context?.echo("PhpAdapter: lint failed")
+                return false
             }
         } else {
             context?.echo("PhpAdapter: vendor/bin/phpcs not found, falling back to php -l src/")
             def result = system.run_command("php -l src/", SystemCall.SHOW_COMMAND_STATUS_VALUE)
             if (result != 0) {
-                context?.echo("PhpAdapter: php -l src/ failed, skipping (non-fatal)")
-                return true
+                context?.echo("PhpAdapter: lint failed")
+                return false
             }
         }
         return true

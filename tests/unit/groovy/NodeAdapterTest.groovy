@@ -98,7 +98,7 @@ class NodeAdapterTest extends Specification {
         result == true
     }
 
-    def "lint() returns true even when lint command fails (non-fatal)"() {
+    def "lint() returns false when lint command fails"() {
         given:
         def system = mockSystem(1)
         def adapter = new NodeAdapter(mockContext, system)
@@ -107,10 +107,10 @@ class NodeAdapterTest extends Specification {
         boolean result = adapter.lint([:])
 
         then:
-        result == true
+        result == false
     }
 
-    def "lint() uses custom lintCommand from buildConfig"() {
+    def "lint() uses custom lint_command from buildConfig"() {
         given:
         def capturedCmd = null
         def system = mockSystem { String cmd ->
@@ -121,7 +121,7 @@ class NodeAdapterTest extends Specification {
         def adapter = new NodeAdapter(null, system)
 
         when:
-        boolean result = adapter.lint([lintCommand: 'my-custom-lint'])
+        boolean result = adapter.lint([lint_command: 'my-custom-lint'])
 
         then:
         result == true
@@ -154,27 +154,28 @@ class NodeAdapterTest extends Specification {
 
     def "test() uses custom test_command from buildConfig"() {
         given:
-        def executedCommands = []
+        def capturedCmd = null
         def system = new SystemCall(null, "", "", "", "") {
             @Override
             def run_command(String cmd, int mode) {
-                executedCommands << cmd
+                capturedCmd = cmd
                 return 0
             }
             @Override
             def run_command(String cmd, int mode, int timeout) {
-                executedCommands << cmd
+                capturedCmd = cmd
                 return 0
             }
         }
-        def adapter = new NodeAdapter(mockContext, system)
+        // null context so withEnv is skipped and the fallback fires with testCmd directly
+        def adapter = new NodeAdapter(null, system)
 
         when:
         boolean result = adapter.test([test_command: "yarn test"])
 
         then:
         result == true
-        // The env var CIORCH_CMD is set to "yarn test" and the shell uses it
+        capturedCmd == 'yarn test'
     }
 
     def "build() happy path returns true"() {
@@ -203,14 +204,28 @@ class NodeAdapterTest extends Specification {
 
     def "build() uses custom build_command from buildConfig"() {
         given:
-        def system = mockSystem(0)
-        def adapter = new NodeAdapter(mockContext, system)
+        def capturedCmd = null
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                capturedCmd = cmd
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                capturedCmd = cmd
+                return 0
+            }
+        }
+        // null context so withEnv is skipped and the fallback fires with buildCmd directly
+        def adapter = new NodeAdapter(null, system)
 
         when:
         boolean result = adapter.build([build_command: "yarn build"])
 
         then:
         result == true
+        capturedCmd == 'yarn build'
     }
 
     def "getArtifacts() returns non-empty list after successful build"() {

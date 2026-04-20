@@ -22,7 +22,10 @@ class GenericAdapter implements BuildAdapter {
     boolean prepare(Map buildConfig, def ctx) {
         this.context = ctx ?: this.context
 
-        String installCmd = buildConfig.install_command ?: buildConfig.prepare_command ?: null
+        // Fall back to raw build config from ciorch.yml when orchestrator passes [:]
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        String installCmd = buildConfig.install_command ?: buildConfig.prepare_command ?:
+            rawBuild.install_command ?: rawBuild.prepare_command ?: null
 
         if (!installCmd) {
             context?.echo("GenericAdapter: no install command configured, skipping prepare")
@@ -31,7 +34,7 @@ class GenericAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${installCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(installCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(installCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -40,7 +43,8 @@ class GenericAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
-        String lintCmd = buildConfig.lint_command ?: null
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        String lintCmd = buildConfig.lint_command ?: config?.lintCommand ?: rawBuild.lint_command ?: null
 
         if (!lintCmd) {
             context?.echo("GenericAdapter: no lint_command configured, skipping lint (non-fatal)")
@@ -49,7 +53,7 @@ class GenericAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -62,7 +66,8 @@ class GenericAdapter implements BuildAdapter {
 
     @Override
     boolean test(Map buildConfig) {
-        String testCmd = buildConfig.test_command ?: null
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        String testCmd = buildConfig.test_command ?: config?.testCommand ?: rawBuild.test_command ?: null
 
         if (!testCmd) {
             context?.echo("GenericAdapter: no test_command configured, skipping test (non-fatal)")
@@ -71,7 +76,7 @@ class GenericAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -80,7 +85,8 @@ class GenericAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: null
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: rawBuild.build_command ?: null
 
         if (!buildCmd) {
             context?.echo("GenericAdapter: no build_command configured, skipping build (non-fatal)")
@@ -90,12 +96,12 @@ class GenericAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            def configArtifacts = buildConfig.artifacts
+            def configArtifacts = buildConfig.artifacts ?: rawBuild.artifacts
             artifacts = configArtifacts ? (List<String>) configArtifacts : []
             return true
         }

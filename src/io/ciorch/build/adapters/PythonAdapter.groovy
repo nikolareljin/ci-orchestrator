@@ -84,11 +84,11 @@ class PythonAdapter implements BuildAdapter {
 
     @Override
     boolean test(Map buildConfig) {
-        String testCmd = buildConfig.test_command ?: "${pythonCmd} -m pytest"
+        String testCmd = buildConfig.test_command ?: config?.testCommand ?: "${pythonCmd} -m pytest"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -100,6 +100,8 @@ class PythonAdapter implements BuildAdapter {
         String defaultCmd = null
         if (buildConfig.build_command) {
             defaultCmd = buildConfig.build_command
+        } else if (config?.buildCommand) {
+            defaultCmd = config.buildCommand
         } else if (packageManager == "poetry") {
             defaultCmd = "poetry build"
         } else if (packageManager == "uv") {
@@ -112,7 +114,7 @@ class PythonAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${defaultCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(defaultCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(defaultCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

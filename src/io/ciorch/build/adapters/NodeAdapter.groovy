@@ -43,17 +43,11 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
-        String lintCmd = buildConfig.lint_command ?: buildConfig.lintCommand ?: "npm run lint"
-
-        // Check whether the lint script exists in package.json (non-fatal if not available)
-        def checkResult = system.run_command(
-            'npm run lint --dry-run 2>/dev/null || npm run lint -- --help 2>/dev/null; true',
-            SystemCall.SHOW_COMMAND_STATUS_VALUE
-        )
+        String lintCmd = buildConfig.lint_command ?: config?.lintCommand ?: "npm run lint"
 
         def result = null
         context?.withEnv(["CIORCH_LINT_CMD=${lintCmd}"]) {
-            result = system.run_command('eval "$CIORCH_LINT_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -66,11 +60,11 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean test(Map buildConfig) {
-        String testCmd = buildConfig.test_command ?: "npm test"
+        String testCmd = buildConfig.test_command ?: config?.testCommand ?: "npm test"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -79,11 +73,11 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: "npm run build"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "npm run build"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

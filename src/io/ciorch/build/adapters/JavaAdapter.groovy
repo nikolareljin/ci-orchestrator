@@ -35,7 +35,13 @@ class JavaAdapter implements BuildAdapter {
 
         // Determine build tool: config key takes precedence, then file detection
         if (buildConfig.build_tool) {
-            this.buildTool = buildConfig.build_tool
+            String requested = buildConfig.build_tool as String
+            if (requested == "gradle" || requested == "maven") {
+                this.buildTool = requested
+            } else {
+                context?.echo("JavaAdapter: unknown build_tool '${requested}', defaulting to maven")
+                this.buildTool = "maven"
+            }
         } else {
             this.buildTool = _detectBuildTool()
         }
@@ -64,6 +70,8 @@ class JavaAdapter implements BuildAdapter {
         String lintCmd
         if (buildConfig.lint_command) {
             lintCmd = buildConfig.lint_command
+        } else if (config?.lintCommand) {
+            lintCmd = config.lintCommand
         } else if (buildTool == "gradle") {
             lintCmd = "./gradlew check -q"
         } else {
@@ -72,7 +80,7 @@ class JavaAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -88,6 +96,8 @@ class JavaAdapter implements BuildAdapter {
         String testCmd
         if (buildConfig.test_command) {
             testCmd = buildConfig.test_command
+        } else if (config?.testCommand) {
+            testCmd = config.testCommand
         } else if (buildTool == "gradle") {
             testCmd = "./gradlew test"
         } else {
@@ -96,7 +106,7 @@ class JavaAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -108,6 +118,8 @@ class JavaAdapter implements BuildAdapter {
         String buildCmd
         if (buildConfig.build_command) {
             buildCmd = buildConfig.build_command
+        } else if (config?.buildCommand) {
+            buildCmd = config.buildCommand
         } else if (buildTool == "gradle") {
             buildCmd = "./gradlew build -x test"
         } else {
@@ -116,7 +128,7 @@ class JavaAdapter implements BuildAdapter {
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

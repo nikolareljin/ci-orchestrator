@@ -106,7 +106,7 @@ class PhpAdapterTest extends Specification {
 
         then:
         result == true
-        executedCommands.any { it.contains("php -l src/") }
+        executedCommands.any { it.contains("find src") && it.contains("php -l") }
     }
 
     def "lint() returns false when lint command fails"() {

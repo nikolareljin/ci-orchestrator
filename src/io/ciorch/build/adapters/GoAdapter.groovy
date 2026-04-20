@@ -59,11 +59,11 @@ class GoAdapter implements BuildAdapter {
 
     @Override
     boolean test(Map buildConfig) {
-        String testCmd = buildConfig.test_command ?: "go test ./..."
+        String testCmd = buildConfig.test_command ?: config?.testCommand ?: "go test ./..."
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -72,11 +72,11 @@ class GoAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: "go build ./..."
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "go build ./..."
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

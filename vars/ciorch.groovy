@@ -30,9 +30,9 @@ def call(Map args = [:]) {
     }
 
     // Allow preset vars (e.g. ciorch_node) to supply a default adapter when ciorch.yml
-    // does not specify one.
+    // does not specify one. Set the property directly to preserve all other loaded config.
     if (args.adapter && !config.buildAdapter) {
-        config.loadMap([build: [adapter: args.adapter]])
+        config.buildAdapter = args.adapter as String
     }
 
     // Initialize system call helper

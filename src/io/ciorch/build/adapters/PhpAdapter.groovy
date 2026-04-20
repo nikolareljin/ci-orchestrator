@@ -47,8 +47,12 @@ class PhpAdapter implements BuildAdapter {
                 return false
             }
         } else {
-            context?.echo("PhpAdapter: vendor/bin/phpcs not found, falling back to php -l src/")
-            def result = system.run_command("php -l src/", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            // php -l requires individual files; iterate all .php files under src/
+            context?.echo("PhpAdapter: vendor/bin/phpcs not found, falling back to php -l on src/ files")
+            def result = system.run_command(
+                "find src -name '*.php' -print0 | xargs -0 -r php -l",
+                SystemCall.SHOW_COMMAND_STATUS_VALUE
+            )
             if (result != 0) {
                 context?.echo("PhpAdapter: lint failed")
                 return false
@@ -59,11 +63,11 @@ class PhpAdapter implements BuildAdapter {
 
     @Override
     boolean test(Map buildConfig) {
-        String testCmd = buildConfig.test_command ?: "vendor/bin/phpunit"
+        String testCmd = buildConfig.test_command ?: config?.testCommand ?: "vendor/bin/phpunit"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
@@ -72,11 +76,11 @@ class PhpAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: "composer install --no-dev --optimize-autoloader"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "composer install --no-dev --optimize-autoloader"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command('eval "$CIORCH_CMD"', SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

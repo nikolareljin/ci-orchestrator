@@ -217,6 +217,32 @@ class PythonAdapterTest extends Specification {
         result == false
     }
 
+    def "prepare() with python3 sets pythonCmd correctly (test() default uses python3)"() {
+        given:
+        def capturedCmd = null
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                capturedCmd = cmd
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                capturedCmd = cmd
+                return 0
+            }
+        }
+        // null context so withEnv is skipped and the fallback fires with testCmd directly
+        def adapter = new PythonAdapter(null, system)
+        adapter.prepare([:], null)
+
+        when:
+        adapter.test([:])
+
+        then:
+        capturedCmd.startsWith("python3")
+    }
+
     def "test() uses custom test_command from buildConfig"() {
         given:
         def capturedCmd = null
@@ -280,6 +306,19 @@ class PythonAdapterTest extends Specification {
 
         then:
         result == true
+    }
+
+    def "build() with pip manager returns no artifacts"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PythonAdapter(mockContext, system)
+        adapter.packageManager = "pip"
+
+        when:
+        adapter.build([:])
+
+        then:
+        adapter.getArtifacts() == []
     }
 
     def "build() uses custom build_command from buildConfig"() {

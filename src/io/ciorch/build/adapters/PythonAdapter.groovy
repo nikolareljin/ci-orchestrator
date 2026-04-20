@@ -11,6 +11,7 @@ class PythonAdapter implements BuildAdapter {
     Config config = null
 
     String packageManager = "pip"
+    private String pythonCmd = "python3"
 
     private List<String> artifacts = []
 
@@ -31,6 +32,9 @@ class PythonAdapter implements BuildAdapter {
                 context?.echo("PythonAdapter: python3/python not found in PATH")
                 return false
             }
+            this.pythonCmd = "python"
+        } else {
+            this.pythonCmd = "python3"
         }
 
         // Detect package manager
@@ -80,7 +84,7 @@ class PythonAdapter implements BuildAdapter {
 
     @Override
     boolean test(Map buildConfig) {
-        String testCmd = buildConfig.test_command ?: "python -m pytest"
+        String testCmd = buildConfig.test_command ?: "${pythonCmd} -m pytest"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
@@ -103,7 +107,6 @@ class PythonAdapter implements BuildAdapter {
         } else {
             // pip: no-op
             context?.echo("PythonAdapter: pip build — no distribution build step, skipping")
-            artifacts = ["dist/"]
             return true
         }
 

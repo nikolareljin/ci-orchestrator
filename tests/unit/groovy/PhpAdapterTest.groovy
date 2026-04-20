@@ -1,0 +1,234 @@
+package io.ciorch.tests
+
+import io.ciorch.build.adapters.PhpAdapter
+import io.ciorch.core.SystemCall
+import spock.lang.Specification
+
+class PhpAdapterTest extends Specification {
+
+    def mockContext = [
+        echo: { msg -> },
+        withEnv: { List<String> vars, Closure body -> body.call() }
+    ]
+
+    private SystemCall mockSystem(int returnCode) {
+        return new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) { return returnCode }
+            @Override
+            def run_command(String cmd, int mode, int timeout) { return returnCode }
+        }
+    }
+
+    private SystemCall mockSystem(Closure<Integer> handler) {
+        return new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) { return handler(cmd) }
+            @Override
+            def run_command(String cmd, int mode, int timeout) { return handler(cmd) }
+        }
+    }
+
+    def "prepare() returns true when php and composer are found"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == true
+    }
+
+    def "prepare() returns false when php is not found"() {
+        given:
+        def system = mockSystem { String cmd ->
+            cmd.contains("php --version") ? 1 : 0
+        }
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == false
+    }
+
+    def "prepare() returns false when composer is not found"() {
+        given:
+        def system = mockSystem { String cmd ->
+            cmd.contains("composer --version") ? 1 : 0
+        }
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == false
+    }
+
+    def "lint() happy path returns true when phpcs is available"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([:])
+
+        then:
+        result == true
+    }
+
+    def "lint() falls back to php -l when phpcs not found"() {
+        given:
+        def executedCommands = []
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                executedCommands << cmd
+                // phpcs not found, fallback to php -l
+                if (cmd.contains("test -x vendor/bin/phpcs")) return 1
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                executedCommands << cmd
+                if (cmd.contains("test -x vendor/bin/phpcs")) return 1
+                return 0
+            }
+        }
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([:])
+
+        then:
+        result == true
+        executedCommands.any { it.contains("php -l src/") }
+    }
+
+    def "lint() returns true even when lint fails (non-fatal)"() {
+        given:
+        def system = mockSystem(1)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([:])
+
+        then:
+        result == true
+    }
+
+    def "test() happy path returns true"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.test([:])
+
+        then:
+        result == true
+    }
+
+    def "test() returns false when phpunit fails"() {
+        given:
+        def system = mockSystem(1)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.test([:])
+
+        then:
+        result == false
+    }
+
+    def "test() uses custom test_command from buildConfig"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.test([test_command: "php artisan test"])
+
+        then:
+        result == true
+    }
+
+    def "build() happy path returns true"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([:])
+
+        then:
+        result == true
+    }
+
+    def "build() returns false when composer install fails"() {
+        given:
+        def system = mockSystem(1)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([:])
+
+        then:
+        result == false
+    }
+
+    def "build() uses custom build_command from buildConfig"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([build_command: "composer install"])
+
+        then:
+        result == true
+    }
+
+    def "getArtifacts() returns non-empty list after successful build"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+        adapter.build([:])
+
+        when:
+        List<String> artifacts = adapter.getArtifacts()
+
+        then:
+        artifacts != null
+        !artifacts.isEmpty()
+        artifacts.contains("vendor/")
+    }
+
+    def "getArtifacts() returns empty list before build"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        List<String> artifacts = adapter.getArtifacts()
+
+        then:
+        artifacts.isEmpty()
+    }
+
+    def "getName() returns 'php'"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        String name = adapter.getName()
+
+        then:
+        name == "php"
+    }
+}

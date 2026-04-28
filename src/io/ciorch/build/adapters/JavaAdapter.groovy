@@ -11,6 +11,7 @@ class JavaAdapter implements BuildAdapter {
     Config config = null
 
     String buildTool = "maven"
+    String gradleCmd = "./gradlew"
     private List<String> artifacts = []
 
     JavaAdapter(def context, SystemCall system, Config cfg = null) {
@@ -51,10 +52,20 @@ class JavaAdapter implements BuildAdapter {
         context?.echo("JavaAdapter: using build tool=${this.buildTool}")
 
         if (this.buildTool == "gradle") {
-            def gradleResult = system.run_command("gradle --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
-            if (gradleResult != 0) {
-                context?.echo("JavaAdapter: gradle not found in PATH")
-                return false
+            // prefer Gradle wrapper (runs on agent workspace); fall back to system gradle
+            def wrapperCheck = system.run_command("test -f gradlew", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (wrapperCheck == 0) {
+                system.run_command("chmod +x gradlew", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                this.gradleCmd = "./gradlew"
+                context?.echo("JavaAdapter: using Gradle wrapper (./gradlew)")
+            } else {
+                def gradleResult = system.run_command("gradle --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                if (gradleResult != 0) {
+                    context?.echo("JavaAdapter: neither ./gradlew nor gradle found in PATH")
+                    return false
+                }
+                this.gradleCmd = "gradle"
+                context?.echo("JavaAdapter: using system gradle")
             }
         } else {
             def mvnResult = system.run_command("mvn --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
@@ -75,7 +86,7 @@ class JavaAdapter implements BuildAdapter {
         } else if (config?.lintCommand) {
             lintCmd = config.lintCommand
         } else if (buildTool == "gradle") {
-            lintCmd = "./gradlew check -q"
+            lintCmd = "${gradleCmd} check -q"
         } else {
             lintCmd = "mvn checkstyle:check -q"
         }
@@ -101,7 +112,7 @@ class JavaAdapter implements BuildAdapter {
         } else if (config?.testCommand) {
             testCmd = config.testCommand
         } else if (buildTool == "gradle") {
-            testCmd = "./gradlew test"
+            testCmd = "${gradleCmd} test"
         } else {
             testCmd = "mvn test -q"
         }
@@ -123,7 +134,7 @@ class JavaAdapter implements BuildAdapter {
         } else if (config?.buildCommand) {
             buildCmd = config.buildCommand
         } else if (buildTool == "gradle") {
-            buildCmd = "./gradlew build -x test"
+            buildCmd = "${gradleCmd} build -x test"
         } else {
             buildCmd = "mvn package -DskipTests -q"
         }
@@ -151,11 +162,10 @@ class JavaAdapter implements BuildAdapter {
         return "java"
     }
 
-    @groovy.transform.CompileStatic
     private String _detectBuildTool() {
-        File gradleFile = new File("build.gradle")
-        File gradleKtsFile = new File("build.gradle.kts")
-        if (gradleFile.exists() || gradleKtsFile.exists()) return "gradle"
+        def hasGradle = system.run_command("test -f build.gradle", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def hasGradleKts = system.run_command("test -f build.gradle.kts", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (hasGradle == 0 || hasGradleKts == 0) return "gradle"
         return "maven"
     }
 }

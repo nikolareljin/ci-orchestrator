@@ -67,10 +67,3 @@ rules:
     event: "push"
     tasks: [lint, test, build, deploy]
     priority: 70
-
-  - id: "node-main-push"
-    src_branch: null
-    dst_branch: "master"
-    event: "push"
-    tasks: [lint, test, build, deploy]
-    priority: 69

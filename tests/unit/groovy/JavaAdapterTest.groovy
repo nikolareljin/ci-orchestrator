@@ -85,10 +85,12 @@ class JavaAdapterTest extends Specification {
         adapter.buildTool == "gradle"
     }
 
-    def "prepare() returns false when gradle not found for gradle project"() {
+    def "prepare() returns false when neither gradlew nor gradle found"() {
         given:
         def system = mockSystem { String cmd ->
-            cmd.contains("gradle --version") ? 1 : 0
+            if (cmd.contains("test -f gradlew")) return 1      // no wrapper
+            if (cmd.contains("gradle --version")) return 1     // no system gradle
+            return 0
         }
         def adapter = new JavaAdapter(mockContext, system)
 
@@ -97,6 +99,69 @@ class JavaAdapterTest extends Specification {
 
         then:
         result == false
+    }
+
+    def "prepare() uses Gradle wrapper when gradlew is present"() {
+        given:
+        def system = mockSystem(0)  // all succeed: wrapper found, chmod succeeds
+        def adapter = new JavaAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([build_tool: "gradle"], mockContext)
+
+        then:
+        result == true
+        adapter.gradleCmd == "./gradlew"
+    }
+
+    def "prepare() falls back to system gradle when wrapper absent"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("test -f gradlew")) return 1  // no wrapper
+            return 0                                         // system gradle present
+        }
+        def adapter = new JavaAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([build_tool: "gradle"], mockContext)
+
+        then:
+        result == true
+        adapter.gradleCmd == "gradle"
+    }
+
+    def "prepare() detects gradle via build.gradle file on agent"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("test -f build.gradle")) return 0  // build.gradle present
+            return 0
+        }
+        def adapter = new JavaAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == true
+        adapter.buildTool == "gradle"
+    }
+
+    def "prepare() defaults to maven when no gradle files found"() {
+        given:
+        def system = mockSystem { String cmd ->
+            // no gradle files, all else succeeds
+            if (cmd.contains("test -f build.gradle")) return 1
+            if (cmd.contains("test -f build.gradle.kts")) return 1
+            return 0
+        }
+        def adapter = new JavaAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == true
+        adapter.buildTool == "maven"
     }
 
     def "prepare() logs java_version when provided in buildConfig"() {

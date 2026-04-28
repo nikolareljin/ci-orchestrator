@@ -58,6 +58,20 @@ class PythonAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
+        String overrideCmd = buildConfig.lint_command ?: config?.lintCommand
+        if (overrideCmd) {
+            def result = null
+            context?.withEnv(["CIORCH_CMD=${overrideCmd}"]) {
+                result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            }
+            if (result == null) result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("PythonAdapter: lint failed")
+                return false
+            }
+            return true
+        }
+
         def ruffCheck = system.run_command("which ruff", SystemCall.SHOW_COMMAND_STATUS_VALUE)
         if (ruffCheck == 0) {
             def result = system.run_command("ruff check .", SystemCall.SHOW_COMMAND_STATUS_VALUE)

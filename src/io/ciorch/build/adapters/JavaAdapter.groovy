@@ -55,9 +55,19 @@ class JavaAdapter implements BuildAdapter {
             // prefer Gradle wrapper (runs on agent workspace); fall back to system gradle
             def wrapperCheck = system.run_command("test -f gradlew", SystemCall.SHOW_COMMAND_STATUS_VALUE)
             if (wrapperCheck == 0) {
-                system.run_command("chmod +x gradlew", SystemCall.SHOW_COMMAND_STATUS_VALUE)
-                this.gradleCmd = "./gradlew"
-                context?.echo("JavaAdapter: using Gradle wrapper (./gradlew)")
+                def chmodResult = system.run_command("chmod +x gradlew", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                if (chmodResult == 0) {
+                    this.gradleCmd = "./gradlew"
+                    context?.echo("JavaAdapter: using Gradle wrapper (./gradlew)")
+                } else {
+                    context?.echo("JavaAdapter: chmod +x gradlew failed, falling back to system gradle")
+                    def gradleFallback = system.run_command("gradle --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                    if (gradleFallback != 0) {
+                        context?.echo("JavaAdapter: chmod +x gradlew failed and gradle not in PATH")
+                        return false
+                    }
+                    this.gradleCmd = "gradle"
+                }
             } else {
                 def gradleResult = system.run_command("gradle --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
                 if (gradleResult != 0) {

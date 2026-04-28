@@ -132,6 +132,32 @@ class GoAdapterTest extends Specification {
         executedCommands.any { it.contains("golangci-lint") }
     }
 
+    def "lint() uses lint_command override when provided"() {
+        given:
+        def capturedCmd = null
+        def system = mockSystem { String cmd -> capturedCmd = cmd; return 0 }
+        def adapter = new GoAdapter(null, system)
+
+        when:
+        boolean result = adapter.lint([lint_command: "custom-go-lint ./..."])
+
+        then:
+        result == true
+        capturedCmd == "custom-go-lint ./..."
+    }
+
+    def "lint() returns false when lint_command override fails"() {
+        given:
+        def system = mockSystem(1)
+        def adapter = new GoAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([lint_command: "custom-go-lint ./..."])
+
+        then:
+        result == false
+    }
+
     def "lint() returns false when go vet fails"() {
         given:
         def system = mockSystem { String cmd ->
@@ -246,7 +272,7 @@ class GoAdapterTest extends Specification {
         capturedCmd == 'go build -o bin/app .'
     }
 
-    def "getArtifacts() returns non-empty list after successful build"() {
+    def "getArtifacts() returns empty list after successful build"() {
         given:
         def system = mockSystem(0)
         def adapter = new GoAdapter(mockContext, system)
@@ -257,8 +283,7 @@ class GoAdapterTest extends Specification {
 
         then:
         artifacts != null
-        !artifacts.isEmpty()
-        artifacts.contains("./...")
+        artifacts.isEmpty()
     }
 
     def "getArtifacts() returns empty list before build"() {

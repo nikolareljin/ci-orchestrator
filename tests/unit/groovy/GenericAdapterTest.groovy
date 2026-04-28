@@ -196,6 +196,19 @@ class GenericAdapterTest extends Specification {
         adapter.getArtifacts() == ["dist/", "bin/"]
     }
 
+    def "build() normalizes single-string artifact to one-element list"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new GenericAdapter(null, system)
+
+        when:
+        boolean result = adapter.build([build_command: "make all", artifacts: "dist/"])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["dist/"]
+    }
+
     def "build() returns false when build_command fails"() {
         given:
         def system = mockSystem(1)

@@ -102,7 +102,13 @@ class GenericAdapter implements BuildAdapter {
 
         if (result == 0) {
             def configArtifacts = buildConfig.artifacts ?: rawBuild.artifacts
-            artifacts = configArtifacts ? (List<String>) configArtifacts : []
+            if (!configArtifacts) {
+                artifacts = []
+            } else if (configArtifacts instanceof List) {
+                artifacts = (configArtifacts as List).collect { it as String }
+            } else {
+                artifacts = [configArtifacts as String]
+            }
             return true
         }
         return false

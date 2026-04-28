@@ -128,6 +128,32 @@ class RustAdapterTest extends Specification {
         result == true
     }
 
+    def "lint() uses lint_command override when provided"() {
+        given:
+        def capturedCmd = null
+        def system = mockSystem { String cmd -> capturedCmd = cmd; return 0 }
+        def adapter = new RustAdapter(null, system)
+
+        when:
+        boolean result = adapter.lint([lint_command: "my-rust-linter"])
+
+        then:
+        result == true
+        capturedCmd == "my-rust-linter"
+    }
+
+    def "lint() returns false when lint_command override fails"() {
+        given:
+        def system = mockSystem(1)
+        def adapter = new RustAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([lint_command: "my-rust-linter"])
+
+        then:
+        result == false
+    }
+
     def "test() happy path returns true"() {
         given:
         def system = mockSystem(0)

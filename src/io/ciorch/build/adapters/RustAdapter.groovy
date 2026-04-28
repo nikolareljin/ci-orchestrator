@@ -39,6 +39,20 @@ class RustAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
+        String overrideCmd = buildConfig.lint_command ?: config?.lintCommand
+        if (overrideCmd) {
+            def result = null
+            context?.withEnv(["CIORCH_CMD=${overrideCmd}"]) {
+                result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            }
+            if (result == null) result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("RustAdapter: lint failed")
+                return false
+            }
+            return true
+        }
+
         def clippyResult = system.run_command("cargo clippy -- -D warnings", SystemCall.SHOW_COMMAND_STATUS_VALUE)
         if (clippyResult != 0) {
             context?.echo("RustAdapter: cargo clippy failed")

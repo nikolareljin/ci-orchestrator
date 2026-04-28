@@ -114,6 +114,38 @@ class JavaAdapterTest extends Specification {
         adapter.gradleCmd == "./gradlew"
     }
 
+    def "prepare() falls back to system gradle when chmod +x gradlew fails"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("chmod +x gradlew")) return 1  // chmod fails
+            return 0                                          // system gradle present
+        }
+        def adapter = new JavaAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([build_tool: "gradle"], mockContext)
+
+        then:
+        result == true
+        adapter.gradleCmd == "gradle"
+    }
+
+    def "prepare() returns false when chmod fails and gradle not in PATH"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("chmod +x gradlew")) return 1
+            if (cmd.contains("gradle --version")) return 1
+            return 0
+        }
+        def adapter = new JavaAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([build_tool: "gradle"], mockContext)
+
+        then:
+        result == false
+    }
+
     def "prepare() falls back to system gradle when wrapper absent"() {
         given:
         def system = mockSystem { String cmd ->

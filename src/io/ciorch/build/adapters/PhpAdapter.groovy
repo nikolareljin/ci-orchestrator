@@ -39,6 +39,20 @@ class PhpAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
+        String overrideCmd = buildConfig.lint_command ?: config?.lintCommand
+        if (overrideCmd) {
+            def result = null
+            context?.withEnv(["CIORCH_CMD=${overrideCmd}"]) {
+                result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            }
+            if (result == null) result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("PhpAdapter: lint failed")
+                return false
+            }
+            return true
+        }
+
         def phpcsCheck = system.run_command("test -x vendor/bin/phpcs", SystemCall.SHOW_COMMAND_STATUS_VALUE)
         if (phpcsCheck == 0) {
             def result = system.run_command("vendor/bin/phpcs", SystemCall.SHOW_COMMAND_STATUS_VALUE)

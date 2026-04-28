@@ -130,6 +130,32 @@ class CSharpAdapterTest extends Specification {
         result == false
     }
 
+    def "lint() uses lint_command override when provided"() {
+        given:
+        def capturedCmd = null
+        def system = mockSystem { String cmd -> capturedCmd = cmd; return 0 }
+        def adapter = new CSharpAdapter(null, system)
+
+        when:
+        boolean result = adapter.lint([lint_command: "dotnet format --severity warn"])
+
+        then:
+        result == true
+        capturedCmd == "dotnet format --severity warn"
+    }
+
+    def "lint() returns false when lint_command override fails"() {
+        given:
+        def system = mockSystem(1)
+        def adapter = new CSharpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([lint_command: "dotnet format --severity warn"])
+
+        then:
+        result == false
+    }
+
     def "test() happy path returns true"() {
         given:
         def system = mockSystem(0)

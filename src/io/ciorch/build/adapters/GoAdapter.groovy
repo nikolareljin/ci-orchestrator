@@ -38,6 +38,20 @@ class GoAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
+        String overrideCmd = buildConfig.lint_command ?: config?.lintCommand
+        if (overrideCmd) {
+            def result = null
+            context?.withEnv(["CIORCH_CMD=${overrideCmd}"]) {
+                result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            }
+            if (result == null) result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("GoAdapter: lint failed")
+                return false
+            }
+            return true
+        }
+
         def vetResult = system.run_command("go vet ./...", SystemCall.SHOW_COMMAND_STATUS_VALUE)
         if (vetResult != 0) {
             context?.echo("GoAdapter: go vet failed")
@@ -82,7 +96,7 @@ class GoAdapter implements BuildAdapter {
         if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            artifacts = ["./..."]
+            artifacts = []
             return true
         }
         return false

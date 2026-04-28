@@ -44,9 +44,16 @@ class CSharpAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
-        def result = system.run_command("dotnet format --verify-no-changes", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        String lintCmd = buildConfig.lint_command ?: config?.lintCommand ?: "dotnet format --verify-no-changes"
+
+        def result = null
+        context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
+            result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        }
+        if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+
         if (result != 0) {
-            context?.echo("CSharpAdapter: dotnet format --verify-no-changes failed")
+            context?.echo("CSharpAdapter: lint failed")
             return false
         }
         return true

@@ -112,7 +112,7 @@ The branching strategy YAML (`resources/matrix/default-gitflow.yml`) controls wh
 | Adapter | Language | Phase |
 |---|---|---|
 | `docker` | Generic Docker build | ✅ 1 |
-| `node` | Node.js / npm / yarn | ✅ 2 |
+| `node` | Node.js / npm / yarn / pnpm | ✅ 2 |
 | `php` | PHP / Composer | ✅ 2 |
 | `python` | Python / pip / poetry / uv | ✅ 2 |
 | `go` | Go modules | ✅ 2 |

@@ -1,6 +1,7 @@
 package io.ciorch.tests
 
 import io.ciorch.build.adapters.CSharpAdapter
+import io.ciorch.core.Config
 import io.ciorch.core.SystemCall
 import spock.lang.Specification
 
@@ -81,6 +82,25 @@ class CSharpAdapterTest extends Specification {
 
         when:
         adapter.prepare([dotnet_version: "8.0"], ctx)
+
+        then:
+        messages.any { it.contains("8.0") }
+    }
+
+    def "prepare() logs dotnet_version from config.toolVersions when absent in buildConfig"() {
+        given:
+        def config = new Config()
+        config.toolVersions = [dotnet_version: "8.0"]
+        def system = mockSystem(0)
+        def messages = []
+        def ctx = [
+            echo: { msg -> messages << msg },
+            withEnv: { List<String> vars, Closure body -> body.call() }
+        ]
+        def adapter = new CSharpAdapter(ctx, system, config)
+
+        when:
+        adapter.prepare([:], ctx)
 
         then:
         messages.any { it.contains("8.0") }

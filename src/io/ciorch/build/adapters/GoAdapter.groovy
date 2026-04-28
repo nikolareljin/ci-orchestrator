@@ -28,8 +28,9 @@ class GoAdapter implements BuildAdapter {
             return false
         }
 
-        if (buildConfig.go_version) {
-            context?.echo("GoAdapter: requested go_version=${buildConfig.go_version} (informational only)")
+        String goVersion = buildConfig.go_version ?: config?.toolVersions?.go_version
+        if (goVersion) {
+            context?.echo("GoAdapter: requested go_version=${goVersion} (informational only)")
         }
 
         return true

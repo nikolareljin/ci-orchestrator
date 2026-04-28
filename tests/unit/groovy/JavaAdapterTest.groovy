@@ -1,6 +1,7 @@
 package io.ciorch.tests
 
 import io.ciorch.build.adapters.JavaAdapter
+import io.ciorch.core.Config
 import io.ciorch.core.SystemCall
 import spock.lang.Specification
 
@@ -113,6 +114,40 @@ class JavaAdapterTest extends Specification {
 
         then:
         messages.any { it.contains("17") }
+    }
+
+    def "prepare() logs java_version from config.toolVersions when absent in buildConfig"() {
+        given:
+        def config = new Config()
+        config.toolVersions = [java_version: "21"]
+        def system = mockSystem(0)
+        def messages = []
+        def ctx = [
+            echo: { msg -> messages << msg },
+            withEnv: { List<String> vars, Closure body -> body.call() }
+        ]
+        def adapter = new JavaAdapter(ctx, system, config)
+
+        when:
+        adapter.prepare([build_tool: "maven"], ctx)
+
+        then:
+        messages.any { it.contains("21") }
+    }
+
+    def "prepare() reads build_tool from config.raw when absent in buildConfig"() {
+        given:
+        def config = new Config()
+        config.raw = [ciorch: [build: [build_tool: "gradle"]]]
+        def system = mockSystem(0)
+        def adapter = new JavaAdapter(mockContext, system, config)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == true
+        adapter.buildTool == "gradle"
     }
 
     def "lint() happy path returns true (maven)"() {

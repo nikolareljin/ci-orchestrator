@@ -1,6 +1,7 @@
 package io.ciorch.tests
 
 import io.ciorch.build.adapters.NodeAdapter
+import io.ciorch.core.Config
 import io.ciorch.core.SystemCall
 import spock.lang.Specification
 
@@ -55,10 +56,13 @@ class NodeAdapterTest extends Specification {
         result == false
     }
 
-    def "prepare() returns false when npm is not found"() {
+    def "prepare() returns false when no package manager is found"() {
         given:
         def system = mockSystem { String cmd ->
-            cmd.contains("npm") ? 1 : 0
+            if (cmd.contains("test -f yarn.lock")) return 1
+            if (cmd.contains("test -f pnpm-lock.yaml")) return 1
+            if (cmd.contains("npm --version")) return 1
+            return 0
         }
         def adapter = new NodeAdapter(mockContext, system)
 
@@ -67,6 +71,58 @@ class NodeAdapterTest extends Specification {
 
         then:
         result == false
+    }
+
+    def "prepare() detects yarn when yarn.lock is present"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("test -f yarn.lock")) return 0
+            return 0
+        }
+        def adapter = new NodeAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == true
+        adapter.packageManager == "yarn"
+    }
+
+    def "prepare() detects pnpm when pnpm-lock.yaml is present"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("test -f yarn.lock")) return 1
+            if (cmd.contains("test -f pnpm-lock.yaml")) return 0
+            return 0
+        }
+        def adapter = new NodeAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == true
+        adapter.packageManager == "pnpm"
+    }
+
+    def "prepare() logs node_version from config.toolVersions when absent in buildConfig"() {
+        given:
+        def config = new Config()
+        config.toolVersions = [node_version: "18"]
+        def system = mockSystem(0)
+        def messages = []
+        def ctx = [
+            echo: { msg -> messages << msg },
+            withEnv: { List<String> vars, Closure body -> body.call() }
+        ]
+        def adapter = new NodeAdapter(ctx, system, config)
+
+        when:
+        adapter.prepare([:], ctx)
+
+        then:
+        messages.any { it.contains("18") }
     }
 
     def "prepare() logs node_version when provided in buildConfig"() {

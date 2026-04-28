@@ -10,6 +10,7 @@ class NodeAdapter implements BuildAdapter {
     SystemCall system = null
     Config config = null
 
+    String packageManager = "npm"
     private List<String> artifacts = []
 
     NodeAdapter(def context, SystemCall system, Config cfg = null) {
@@ -28,13 +29,25 @@ class NodeAdapter implements BuildAdapter {
             return false
         }
 
-        if (buildConfig.node_version) {
-            context?.echo("NodeAdapter: requested node_version=${buildConfig.node_version}")
+        String nodeVersion = buildConfig.node_version ?: config?.toolVersions?.node_version
+        if (nodeVersion) {
+            context?.echo("NodeAdapter: requested node_version=${nodeVersion}")
         }
 
-        def npmResult = system.run_command("npm --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        if (npmResult != 0) {
-            context?.echo("NodeAdapter: npm not found in PATH")
+        // lockfile-based package manager detection
+        def yarnLock = system.run_command("test -f yarn.lock", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def pnpmLock = system.run_command("test -f pnpm-lock.yaml", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (yarnLock == 0) {
+            packageManager = "yarn"
+        } else if (pnpmLock == 0) {
+            packageManager = "pnpm"
+        } else {
+            packageManager = "npm"
+        }
+
+        def pmResult = system.run_command("${packageManager} --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (pmResult != 0) {
+            context?.echo("NodeAdapter: ${packageManager} not found in PATH")
             return false
         }
 
@@ -43,10 +56,10 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean lint(Map buildConfig) {
-        String lintCmd = buildConfig.lint_command ?: config?.lintCommand ?: "npm run lint"
+        String lintCmd = buildConfig.lint_command ?: config?.lintCommand ?: "${packageManager} run lint"
 
         def result = null
-        context?.withEnv(["CIORCH_LINT_CMD=${lintCmd}"]) {
+        context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
             result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
         }
         if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
@@ -60,7 +73,7 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean test(Map buildConfig) {
-        String testCmd = buildConfig.test_command ?: config?.testCommand ?: "npm test"
+        String testCmd = buildConfig.test_command ?: config?.testCommand ?: "${packageManager} test"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
@@ -73,7 +86,7 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "npm run build"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "${packageManager} run build"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {

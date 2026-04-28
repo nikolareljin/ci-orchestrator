@@ -109,9 +109,59 @@ class PhpAdapterTest extends Specification {
         executedCommands.any { it.contains("find src") && it.contains("php -l") }
     }
 
-    def "lint() returns false when lint command fails"() {
+    def "lint() skips php -l fallback when src/ does not exist"() {
         given:
-        def system = mockSystem(1)
+        def executedCommands = []
+        def system = new SystemCall(null, "", "", "", "") {
+            @Override
+            def run_command(String cmd, int mode) {
+                executedCommands << cmd
+                if (cmd.contains("test -x vendor/bin/phpcs")) return 1  // phpcs absent
+                if (cmd.contains("test -d src")) return 1               // src/ absent
+                return 0
+            }
+            @Override
+            def run_command(String cmd, int mode, int timeout) {
+                executedCommands << cmd
+                if (cmd.contains("test -x vendor/bin/phpcs")) return 1
+                if (cmd.contains("test -d src")) return 1
+                return 0
+            }
+        }
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([:])
+
+        then:
+        result == true
+        !executedCommands.any { it.contains("find src") }
+    }
+
+    def "lint() returns false when phpcs is found but fails"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("test -x vendor/bin/phpcs")) return 0  // phpcs found
+            if (cmd.contains("vendor/bin/phpcs")) return 1          // phpcs run fails
+            return 0
+        }
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.lint([:])
+
+        then:
+        result == false
+    }
+
+    def "lint() returns false when phpcs absent and php -l fails"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("test -x vendor/bin/phpcs")) return 1  // phpcs absent
+            if (cmd.contains("test -d src")) return 0               // src/ exists
+            if (cmd.contains("find src")) return 1                  // php -l fails
+            return 0
+        }
         def adapter = new PhpAdapter(mockContext, system)
 
         when:

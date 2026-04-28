@@ -1,6 +1,7 @@
 package io.ciorch.tests
 
 import io.ciorch.build.adapters.GoAdapter
+import io.ciorch.core.Config
 import io.ciorch.core.SystemCall
 import spock.lang.Specification
 
@@ -67,6 +68,25 @@ class GoAdapterTest extends Specification {
 
         when:
         adapter.prepare([go_version: "1.22"], ctx)
+
+        then:
+        messages.any { it.contains("1.22") }
+    }
+
+    def "prepare() logs go_version from config.toolVersions when absent in buildConfig"() {
+        given:
+        def config = new Config()
+        config.toolVersions = [go_version: "1.22"]
+        def system = mockSystem(0)
+        def messages = []
+        def ctx = [
+            echo: { msg -> messages << msg },
+            withEnv: { List<String> vars, Closure body -> body.call() }
+        ]
+        def adapter = new GoAdapter(ctx, system, config)
+
+        when:
+        adapter.prepare([:], ctx)
 
         then:
         messages.any { it.contains("1.22") }

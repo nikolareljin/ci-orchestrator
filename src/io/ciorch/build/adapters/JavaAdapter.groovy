@@ -29,13 +29,15 @@ class JavaAdapter implements BuildAdapter {
             return false
         }
 
-        if (buildConfig.java_version) {
-            context?.echo("JavaAdapter: requested java_version=${buildConfig.java_version}")
+        String javaVersion = buildConfig.java_version ?: config?.toolVersions?.java_version
+        if (javaVersion) {
+            context?.echo("JavaAdapter: requested java_version=${javaVersion}")
         }
 
-        // Determine build tool: config key takes precedence, then file detection
-        if (buildConfig.build_tool) {
-            String requested = buildConfig.build_tool as String
+        // Determine build tool: buildConfig key → ciorch.yml raw → file detection
+        String toolHint = buildConfig.build_tool ?: config?.raw?.ciorch?.build?.build_tool
+        if (toolHint) {
+            String requested = toolHint as String
             if (requested == "gradle" || requested == "maven") {
                 this.buildTool = requested
             } else {

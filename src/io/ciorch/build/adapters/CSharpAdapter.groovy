@@ -28,8 +28,9 @@ class CSharpAdapter implements BuildAdapter {
             return false
         }
 
-        if (buildConfig.dotnet_version) {
-            context?.echo("CSharpAdapter: requested dotnet_version=${buildConfig.dotnet_version} (informational only)")
+        String dotnetVersion = buildConfig.dotnet_version ?: config?.toolVersions?.dotnet_version
+        if (dotnetVersion) {
+            context?.echo("CSharpAdapter: requested dotnet_version=${dotnetVersion} (informational only)")
         }
 
         def restoreResult = system.run_command("dotnet restore", SystemCall.SHOW_COMMAND_STATUS_VALUE)

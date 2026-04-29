@@ -46,6 +46,12 @@ class PipelineOrchestratorTest extends Specification {
         PipelineOrchestrator.registerBuildAdapter("counting", CountingAdapter)
     }
 
+    def cleanup() {
+        def field = PipelineOrchestrator.class.getDeclaredField("BUILD_REGISTRY")
+        field.setAccessible(true)
+        ((Map) field.get(null)).remove("counting")
+    }
+
     // Reflection helpers to access private methods without MOP arg-wrapping ambiguity
     private static boolean dispatchTasks(PipelineOrchestrator orch, List<String> tasks) {
         Method m = PipelineOrchestrator.class.getDeclaredMethod("_dispatchTasks", List.class)

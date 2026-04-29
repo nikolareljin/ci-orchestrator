@@ -115,6 +115,16 @@ class Config implements Serializable {
         platformOverrides = (ciorch.platform ?: [:]) as Map
     }
 
+    // Returns build config keys in the snake_case form adapters expect
+    Map buildMap() {
+        Map m = [:]
+        if (lintCommand)  m.lint_command  = lintCommand
+        if (testCommand)  m.test_command  = testCommand
+        if (buildCommand) m.build_command = buildCommand
+        m.putAll(toolVersions ?: [:])
+        return m
+    }
+
     // Get deploy environment config by name
     Map getEnvironment(String envName) {
         return (deployEnvironments[envName] ?: [:]) as Map

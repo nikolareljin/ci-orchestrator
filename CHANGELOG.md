@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-19 (post-review fixes)
+
+### Fixed (post-review)
+- `PipelineOrchestrator` — pass `config.buildMap()` into `prepare()`, `lint()`, `test()`, and `build()` so adapter behavior is driven by `ciorch.yml` and Jenkinsfile overrides rather than an empty map
+- `vars/ciorch.groovy` — apply `lint_command`, `test_command`, `build_command`, and `*_version` keys from `args` into `Config` so preset-var overrides work end-to-end
+- `PhpAdapter.lint()` — replace GNU-only `xargs -r` with portable `find -exec sh -c 'for f do ...' sh {} +` so PHP lint works on macOS/BSD agents
+- `PipelineOrchestratorTest` — added `cleanup()` to remove the `"counting"` registry entry after each spec, preventing order-dependent test failures
+
 ## [0.2.0] - 2026-04-19
 
 ### Added

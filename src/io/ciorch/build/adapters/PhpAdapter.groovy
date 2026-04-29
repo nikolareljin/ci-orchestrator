@@ -69,7 +69,7 @@ class PhpAdapter implements BuildAdapter {
             // php -l requires individual files; iterate all .php files under src/
             context?.echo("PhpAdapter: vendor/bin/phpcs not found, falling back to php -l on src/ files")
             def result = system.run_command(
-                "find src -name '*.php' -print0 | xargs -0 -r php -l",
+                "find src -type f -name '*.php' -exec sh -c 'for f do php -l \"\$f\" || exit 1; done' sh {} +",
                 SystemCall.SHOW_COMMAND_STATUS_VALUE
             )
             if (result != 0) {

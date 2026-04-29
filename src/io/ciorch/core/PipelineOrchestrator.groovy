@@ -146,9 +146,9 @@ class PipelineOrchestrator implements Serializable {
         if (!adapter) return false
 
         switch (step) {
-            case TaskType.LINT: return adapter.lint([:])
-            case TaskType.TEST: return adapter.test([:])
-            case TaskType.BUILD: return adapter.build([:])
+            case TaskType.LINT: return adapter.lint(config.buildMap())
+            case TaskType.TEST: return adapter.test(config.buildMap())
+            case TaskType.BUILD: return adapter.build(config.buildMap())
             default: return true
         }
     }
@@ -193,7 +193,7 @@ class PipelineOrchestrator implements Serializable {
             return null
         }
         BuildAdapter adapter = adapterClass.newInstance(context, system, config) as BuildAdapter
-        if (!adapter.prepare([:], context)) {
+        if (!adapter.prepare(config.buildMap(), context)) {
             notifier.log("PipelineOrchestrator: adapter '${adapterName}' prepare() failed — aborting build steps", Notifier.ERROR)
             return null
         }

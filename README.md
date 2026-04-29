@@ -20,7 +20,7 @@ Instead of writing a `Jenkinsfile` from scratch for every project, you declare *
 
 - **Data-driven pipelines** — branching rules are YAML, not code. Swap strategies (`gitflow`, `github-flow`, `trunk-based`) without touching your `Jenkinsfile`.
 - **Adapter pattern** — plug in any build toolchain (Node, PHP, Go, Java, Python, Rust, Docker…) or deploy target (WordPress, Drupal, Symfony, Django, FastAPI…) via a single interface.
-- **Shell-injection safe** — all external values are passed through `withEnv` + single-quoted shell variables, never interpolated into Groovy strings.
+- **Shell-injection aware** — external values are generally passed through `withEnv` + single-quoted shell variables; however, user-configured command overrides such as `lint_command`, `test_command`, and `build_command` are trusted config and executed verbatim when set.
 - **Jenkins CPS compliant** — all classes implement `Serializable`; regex and split operations are annotated `@NonCPS`.
 - **Testable** — 261 unit tests (Spock + JenkinsPipelineUnit) run without a live Jenkins instance.
 - **Single config file** — `ciorch.yml` at repo root is read by every supported platform.

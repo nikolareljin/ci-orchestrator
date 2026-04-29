@@ -3,7 +3,7 @@
   <h1>ci-orchestrator</h1>
   <p>Multi-platform CI/CD orchestration library for Jenkins, GitHub Actions, GitLab CI, and Bitbucket Pipelines.<br/>Build any language stack. Deploy to any CMS or framework.</p>
 
-  [![Tests](https://img.shields.io/badge/tests-232%20passing-brightgreen)](#running-tests)
+  [![Tests](https://img.shields.io/badge/tests-258%20passing-brightgreen)](#running-tests)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
   [![Phase](https://img.shields.io/badge/phase-2%20Build%20Adapters-blue)](#platform-status)
   [![Groovy](https://img.shields.io/badge/Groovy-3.0-4298B8?logo=apache-groovy&logoColor=white)](https://groovy-lang.org/)
@@ -22,7 +22,7 @@ Instead of writing a `Jenkinsfile` from scratch for every project, you declare *
 - **Adapter pattern** — plug in any build toolchain (Node, PHP, Go, Java, Python, Rust, Docker…) or deploy target (WordPress, Drupal, Symfony, Django, FastAPI…) via a single interface.
 - **Shell-injection safe** — all external values are passed through `withEnv` + single-quoted shell variables, never interpolated into Groovy strings.
 - **Jenkins CPS compliant** — all classes implement `Serializable`; regex and split operations are annotated `@NonCPS`.
-- **Testable** — 81 unit tests (Spock + JenkinsPipelineUnit) run without a live Jenkins instance.
+- **Testable** — 258 unit tests (Spock + JenkinsPipelineUnit) run without a live Jenkins instance.
 - **Single config file** — `ciorch.yml` at repo root is read by every supported platform.
 
 ## Platform Status
@@ -140,7 +140,7 @@ The branching strategy YAML (`resources/matrix/default-gitflow.yml`) controls wh
 ./gradlew :tests:unit:test
 ```
 
-Tests use [JenkinsPipelineUnit](https://github.com/jenkinsci/JenkinsPipelineUnit) + [Spock](https://spockframework.org/) and run without a live Jenkins instance. 81 tests covering `Version`, `MatrixEvaluator`, `WebhookParser`, and `Config`.
+Tests use [JenkinsPipelineUnit](https://github.com/jenkinsci/JenkinsPipelineUnit) + [Spock](https://spockframework.org/) and run without a live Jenkins instance. 258 tests covering all adapters, `Version`, `MatrixEvaluator`, `WebhookParser`, and `Config`.
 
 ## Documentation
 

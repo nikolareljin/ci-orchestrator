@@ -1,6 +1,6 @@
 # ci-orchestrator Java standard branching matrix
-# Rules are evaluated top-to-bottom; first match wins.
-# Priority: higher number = evaluated first
+# Matching rules are selected by priority; higher numbers take precedence.
+# File order does not control evaluation.
 
 branch_patterns:
   feature: "^feature/"

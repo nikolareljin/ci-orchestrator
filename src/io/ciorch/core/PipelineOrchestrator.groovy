@@ -45,6 +45,7 @@ class PipelineOrchestrator implements Serializable {
     // Runtime state
     GitEvent currentEvent = null
     List<String> pendingTasks = []
+    private BuildAdapter _cachedAdapter = null
 
     PipelineOrchestrator(def context, Config config, SystemCall system) {
         this.context = context
@@ -183,6 +184,8 @@ class PipelineOrchestrator implements Serializable {
     }
 
     private BuildAdapter _resolveBuildAdapter() {
+        if (_cachedAdapter != null) return _cachedAdapter
+
         String adapterName = config.buildAdapter ?: "docker"
         Class adapterClass = BUILD_REGISTRY[adapterName]
         if (!adapterClass) {
@@ -190,8 +193,12 @@ class PipelineOrchestrator implements Serializable {
             return null
         }
         BuildAdapter adapter = adapterClass.newInstance(context, system, config) as BuildAdapter
-        adapter.prepare([:], context)
-        return adapter
+        if (!adapter.prepare([:], context)) {
+            notifier.log("PipelineOrchestrator: adapter '${adapterName}' prepare() failed — aborting build steps", Notifier.ERROR)
+            return null
+        }
+        _cachedAdapter = adapter
+        return _cachedAdapter
     }
 
     private DeployAdapter _resolveDeployAdapter() {

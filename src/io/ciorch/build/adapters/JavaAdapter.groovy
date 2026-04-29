@@ -32,7 +32,7 @@ class JavaAdapter implements BuildAdapter {
 
         String javaVersion = buildConfig.java_version ?: config?.toolVersions?.java_version
         if (javaVersion) {
-            context?.echo("JavaAdapter: requested java_version=${javaVersion}")
+            context?.echo("JavaAdapter: requested java_version=${javaVersion} (informational only)")
         }
 
         // Determine build tool: buildConfig key → ciorch.yml raw → file detection

@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 8 preset `vars/ciorch_*.groovy` entry points (node, go, java, php, python, csharp, rust, cpp)
 - 8 `resources/matrix/*-standard.yml` presets wired to the new adapters
 - All 9 adapters registered in `PipelineOrchestrator.BUILD_REGISTRY`
-- 177 new unit tests (258 total, all passing)
+- 177 new unit tests (258 total verified by CI, up from 81 in 0.1.0)
 
 ### Fixed
 - `lint_command` config key now consistent snake_case across all adapters (was `lintCommand` in NodeAdapter)

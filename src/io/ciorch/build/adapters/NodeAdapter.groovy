@@ -31,7 +31,7 @@ class NodeAdapter implements BuildAdapter {
 
         String nodeVersion = buildConfig.node_version ?: config?.toolVersions?.node_version
         if (nodeVersion) {
-            context?.echo("NodeAdapter: requested node_version=${nodeVersion}")
+            context?.echo("NodeAdapter: requested node_version=${nodeVersion} (informational only)")
         }
 
         // lockfile-based package manager detection

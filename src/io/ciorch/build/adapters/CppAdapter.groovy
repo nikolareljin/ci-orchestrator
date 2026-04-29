@@ -105,7 +105,7 @@ class CppAdapter implements BuildAdapter {
             return false
         }
 
-        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "cmake --build build -j 4"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "cmake --build build --parallel 4"
 
         def result = null
         context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {

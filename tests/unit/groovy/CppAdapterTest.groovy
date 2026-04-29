@@ -258,11 +258,11 @@ class CppAdapterTest extends Specification {
         def adapter = new CppAdapter(null, system)
 
         when:
-        boolean result = adapter.build([build_command: "cmake --build build --config Release -j 8"])
+        boolean result = adapter.build([build_command: "cmake --build build --config Release --parallel 8"])
 
         then:
         result == true
-        capturedCmd == "cmake --build build --config Release -j 8"
+        capturedCmd == "cmake --build build --config Release --parallel 8"
     }
 
     def "getArtifacts() returns empty list before build"() {

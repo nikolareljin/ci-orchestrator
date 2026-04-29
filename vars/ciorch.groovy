@@ -29,6 +29,12 @@ def call(Map args = [:]) {
         echo "ciorch: ciorch.yml not found at ${configPath}, using defaults"
     }
 
+    // Allow preset vars (e.g. ciorch_node) to supply a default adapter when ciorch.yml
+    // does not specify one. Set the property directly to preserve all other loaded config.
+    if (args.adapter && !config.buildAdapter) {
+        config.buildAdapter = args.adapter as String
+    }
+
     // Initialize system call helper
     SystemCall system = new SystemCall(
         this,

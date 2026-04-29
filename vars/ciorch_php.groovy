@@ -1,3 +1,3 @@
 def call(Map args = [:]) {
-    ciorch([adapter: 'php'] + args)
+    ciorch(args + [adapter: 'php'])
 }

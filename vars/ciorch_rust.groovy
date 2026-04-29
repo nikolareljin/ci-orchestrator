@@ -1,3 +1,3 @@
 def call(Map args = [:]) {
-    ciorch([adapter: 'rust'] + args)
+    ciorch(args + [adapter: 'rust'])
 }

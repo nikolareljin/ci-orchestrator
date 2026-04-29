@@ -1,3 +1,3 @@
 def call(Map args = [:]) {
-    ciorch([adapter: 'java'] + args)
+    ciorch(args + [adapter: 'java'])
 }

@@ -39,7 +39,7 @@ def call(Map args = [:]) {
     if (args.lint_command)  config.lintCommand  = args.lint_command  as String
     if (args.test_command)  config.testCommand  = args.test_command  as String
     if (args.build_command) config.buildCommand = args.build_command as String
-    args.each { k, v -> if (k.toString().endsWith('_version')) config.toolVersions[k] = v }
+    args.each { k, v -> if (k.toString().endsWith('_version')) config.toolVersions[k.toString()] = v }
 
     // Initialize system call helper
     SystemCall system = new SystemCall(

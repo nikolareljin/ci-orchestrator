@@ -7,14 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-04-19 (post-review fixes)
-
-### Fixed (post-review)
-- `PipelineOrchestrator` — pass `config.buildMap()` into `prepare()`, `lint()`, `test()`, and `build()` so adapter behavior is driven by `ciorch.yml` and Jenkinsfile overrides rather than an empty map
-- `vars/ciorch.groovy` — apply `lint_command`, `test_command`, `build_command`, and `*_version` keys from `args` into `Config` so preset-var overrides work end-to-end
-- `PhpAdapter.lint()` — replace GNU-only `xargs -r` with portable `find -exec sh -c 'for f do ...' sh {} +` so PHP lint works on macOS/BSD agents
-- `PipelineOrchestratorTest` — added `cleanup()` to remove the `"counting"` registry entry after each spec, preventing order-dependent test failures
-
 ## [0.2.0] - 2026-04-19
 
 ### Added
@@ -32,11 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All 9 adapters registered in `PipelineOrchestrator.BUILD_REGISTRY`
 - 177 new unit tests (261 total verified by CI, up from 81 in 0.1.0)
 - `PipelineOrchestratorTest` — 3 focused tests covering adapter caching (`prepare()` called once per run) and prepare() failure aborting build steps
+- `Config.buildMap()` — accessor returning snake_case build config map for consistent adapter dispatch
 
 ### Fixed
 - `WebhookParser.processJob()` — plain push events to allowed branches (develop, master, release, etc.) now set `shouldBeProcessed = true`; previously only forced-push and PR events were gated through the allowlist
 - `CppAdapter.lint()` — added `--error-exitcode=1` to cppcheck so lint fails when cppcheck reports findings (previously always exited 0)
 - Preset `vars/ciorch_*.groovy` entry points — inverted map merge order (`args + [adapter:'X']`) so the preset adapter key always wins over caller-supplied overrides
+- `PipelineOrchestrator` — pass `config.buildMap()` into `prepare()`, `lint()`, `test()`, and `build()` so adapter behavior is driven by `ciorch.yml` and Jenkinsfile overrides
+- `vars/ciorch.groovy` — apply `lint_command`, `test_command`, `build_command`, and `*_version` keys from `args` into `Config` so preset-var overrides work end-to-end; normalize version keys to plain String to avoid GString lookup mismatches
+- `PhpAdapter.lint()` — replace GNU-only `xargs -r` with portable `find -exec sh -c 'for f do ...' sh {} +` so PHP lint works on macOS/BSD agents
 - `lint_command` config key now consistent snake_case across all adapters (was `lintCommand` in NodeAdapter)
 - `lint()` correctly returns `false` on failure (was silently returning `true` in NodeAdapter and PhpAdapter)
 - Null-context fallback in `test()` and `build()` now invokes the resolved command directly (was using `eval "$CIORCH_CMD"` without the env var set)

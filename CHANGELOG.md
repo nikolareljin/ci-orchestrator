@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `WebhookParser.processJob()` — plain push events to allowed branches (develop, master, release, etc.) now set `shouldBeProcessed = true`; previously only forced-push and PR events were gated through the allowlist
+- `CppAdapter.lint()` — added `--error-exitcode=1` to cppcheck so lint fails when cppcheck reports findings (previously always exited 0)
+
+### Added
+- `PipelineOrchestratorTest` — 3 focused tests covering adapter caching (`prepare()` called once for multiple build steps) and prepare() failure aborting build steps; 261 total tests
+
 ## [0.2.0] - 2026-04-19
 
 ### Added

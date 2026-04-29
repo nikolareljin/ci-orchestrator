@@ -71,7 +71,7 @@ class CppAdapter implements BuildAdapter {
             return true
         }
 
-        def result = system.run_command("cppcheck --enable=warning .", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command("cppcheck --enable=warning --error-exitcode=1 .", SystemCall.SHOW_COMMAND_STATUS_VALUE)
         if (result != 0) {
             context?.echo("CppAdapter: cppcheck failed")
             return false

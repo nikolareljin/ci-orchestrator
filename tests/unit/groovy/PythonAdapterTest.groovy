@@ -258,7 +258,6 @@ class PythonAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with testCmd directly
         def adapter = new PythonAdapter(null, system)
         adapter.prepare([:], null)
 
@@ -284,7 +283,6 @@ class PythonAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with testCmd directly
         def adapter = new PythonAdapter(null, system)
 
         when:
@@ -362,7 +360,6 @@ class PythonAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with buildCmd directly
         def adapter = new PythonAdapter(null, system)
         adapter.packageManager = "poetry"
 

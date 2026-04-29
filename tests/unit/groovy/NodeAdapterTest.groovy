@@ -173,7 +173,6 @@ class NodeAdapterTest extends Specification {
             capturedCmd = cmd
             return 0
         }
-        // null context so withEnv is skipped and the fallback fires with lintCmd directly
         def adapter = new NodeAdapter(null, system)
 
         when:
@@ -223,7 +222,6 @@ class NodeAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with testCmd directly
         def adapter = new NodeAdapter(null, system)
 
         when:
@@ -273,7 +271,6 @@ class NodeAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with buildCmd directly
         def adapter = new NodeAdapter(null, system)
 
         when:

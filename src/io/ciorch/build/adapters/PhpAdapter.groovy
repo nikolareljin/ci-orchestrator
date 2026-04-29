@@ -41,11 +41,7 @@ class PhpAdapter implements BuildAdapter {
     boolean lint(Map buildConfig) {
         String overrideCmd = buildConfig.lint_command ?: config?.lintCommand
         if (overrideCmd) {
-            def result = null
-            context?.withEnv(["CIORCH_CMD=${overrideCmd}"]) {
-                result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-            }
-            if (result == null) result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            def result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
             if (result != 0) {
                 context?.echo("PhpAdapter: lint failed")
                 return false
@@ -84,11 +80,7 @@ class PhpAdapter implements BuildAdapter {
     boolean test(Map buildConfig) {
         String testCmd = buildConfig.test_command ?: config?.testCommand ?: "vendor/bin/phpunit"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -97,11 +89,7 @@ class PhpAdapter implements BuildAdapter {
     boolean build(Map buildConfig) {
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "composer install --no-dev --optimize-autoloader"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             artifacts = ["vendor/"]

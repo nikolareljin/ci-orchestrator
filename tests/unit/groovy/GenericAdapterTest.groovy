@@ -72,7 +72,6 @@ class GenericAdapterTest extends Specification {
             capturedCmd = cmd
             return 0
         }
-        // null context so withEnv is skipped
         def adapter = new GenericAdapter(null, system)
 
         when:
@@ -134,7 +133,6 @@ class GenericAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with testCmd directly
         def adapter = new GenericAdapter(null, system)
 
         when:
@@ -184,7 +182,6 @@ class GenericAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with buildCmd directly
         def adapter = new GenericAdapter(null, system)
 
         when:

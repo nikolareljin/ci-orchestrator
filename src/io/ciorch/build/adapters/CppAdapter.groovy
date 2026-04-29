@@ -52,11 +52,7 @@ class CppAdapter implements BuildAdapter {
         String lintCmd = buildConfig.lint_command ?: config?.lintCommand ?: null
 
         if (lintCmd) {
-            def result = null
-            context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
-                result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-            }
-            if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            def result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
             if (result != 0) {
                 context?.echo("CppAdapter: lint failed")
                 return false
@@ -83,11 +79,7 @@ class CppAdapter implements BuildAdapter {
     boolean test(Map buildConfig) {
         String testCmd = buildConfig.test_command ?: config?.testCommand ?: "ctest --test-dir build"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -107,11 +99,7 @@ class CppAdapter implements BuildAdapter {
 
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "cmake --build build --parallel 4"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             artifacts = ["build/"]

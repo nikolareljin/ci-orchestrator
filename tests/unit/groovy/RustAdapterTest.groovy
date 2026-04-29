@@ -193,7 +193,6 @@ class RustAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with testCmd directly
         def adapter = new RustAdapter(null, system)
 
         when:
@@ -243,7 +242,6 @@ class RustAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with buildCmd directly
         def adapter = new RustAdapter(null, system)
 
         when:

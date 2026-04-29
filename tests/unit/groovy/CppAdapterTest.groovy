@@ -134,7 +134,6 @@ class CppAdapterTest extends Specification {
             capturedCmd = cmd
             return 0
         }
-        // null context so withEnv is skipped and the fallback fires with lintCmd directly
         def adapter = new CppAdapter(null, system)
 
         when:
@@ -184,7 +183,6 @@ class CppAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with testCmd directly
         def adapter = new CppAdapter(null, system)
 
         when:
@@ -254,7 +252,6 @@ class CppAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with buildCmd directly
         def adapter = new CppAdapter(null, system)
 
         when:

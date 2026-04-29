@@ -32,11 +32,7 @@ class GenericAdapter implements BuildAdapter {
             return true
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${installCmd}"]) {
-            result = system.run_command(installCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(installCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(installCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -51,11 +47,7 @@ class GenericAdapter implements BuildAdapter {
             return true
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
-            result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result != 0) {
             context?.echo("GenericAdapter: lint failed")
@@ -74,11 +66,7 @@ class GenericAdapter implements BuildAdapter {
             return true
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -94,11 +82,7 @@ class GenericAdapter implements BuildAdapter {
             return true
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             def configArtifacts = buildConfig.artifacts ?: rawBuild.artifacts

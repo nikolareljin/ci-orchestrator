@@ -101,11 +101,7 @@ class JavaAdapter implements BuildAdapter {
             lintCmd = "mvn checkstyle:check -q"
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
-            result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result != 0) {
             context?.echo("JavaAdapter: lint failed")
@@ -127,11 +123,7 @@ class JavaAdapter implements BuildAdapter {
             testCmd = "mvn test -q"
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -149,11 +141,7 @@ class JavaAdapter implements BuildAdapter {
             buildCmd = "mvn package -DskipTests -q"
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             artifacts = (buildTool == "gradle") ? ["build/libs/"] : ["target/"]

@@ -58,11 +58,7 @@ class NodeAdapter implements BuildAdapter {
     boolean lint(Map buildConfig) {
         String lintCmd = buildConfig.lint_command ?: config?.lintCommand ?: "${packageManager} run lint"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${lintCmd}"]) {
-            result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(lintCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result != 0) {
             context?.echo("NodeAdapter: lint failed")
@@ -75,11 +71,7 @@ class NodeAdapter implements BuildAdapter {
     boolean test(Map buildConfig) {
         String testCmd = buildConfig.test_command ?: config?.testCommand ?: "${packageManager} test"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -88,11 +80,7 @@ class NodeAdapter implements BuildAdapter {
     boolean build(Map buildConfig) {
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "${packageManager} run build"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${buildCmd}"]) {
-            result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             artifacts = ["dist/"]

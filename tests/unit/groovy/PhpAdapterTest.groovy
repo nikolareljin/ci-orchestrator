@@ -236,7 +236,6 @@ class PhpAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with testCmd directly
         def adapter = new PhpAdapter(null, system)
 
         when:
@@ -286,7 +285,6 @@ class PhpAdapterTest extends Specification {
                 return 0
             }
         }
-        // null context so withEnv is skipped and the fallback fires with buildCmd directly
         def adapter = new PhpAdapter(null, system)
 
         when:

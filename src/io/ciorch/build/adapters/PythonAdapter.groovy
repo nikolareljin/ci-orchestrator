@@ -60,11 +60,7 @@ class PythonAdapter implements BuildAdapter {
     boolean lint(Map buildConfig) {
         String overrideCmd = buildConfig.lint_command ?: config?.lintCommand
         if (overrideCmd) {
-            def result = null
-            context?.withEnv(["CIORCH_CMD=${overrideCmd}"]) {
-                result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-            }
-            if (result == null) result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            def result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
             if (result != 0) {
                 context?.echo("PythonAdapter: lint failed")
                 return false
@@ -100,11 +96,7 @@ class PythonAdapter implements BuildAdapter {
     boolean test(Map buildConfig) {
         String testCmd = buildConfig.test_command ?: config?.testCommand ?: "${pythonCmd} -m pytest"
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${testCmd}"]) {
-            result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         return result == 0
     }
@@ -126,11 +118,7 @@ class PythonAdapter implements BuildAdapter {
             return true
         }
 
-        def result = null
-        context?.withEnv(["CIORCH_CMD=${defaultCmd}"]) {
-            result = system.run_command(defaultCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
-        }
-        if (result == null) result = system.run_command(defaultCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        def result = system.run_command(defaultCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             artifacts = ["dist/"]

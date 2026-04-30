@@ -80,15 +80,42 @@ class RustAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "cargo build --release"
+        String defaultBuildCmd = "cargo build --release"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            artifacts = ["target/release/"]
+            artifacts = resolveArtifacts(buildConfig, buildCmd, defaultBuildCmd)
             return true
         }
         return false
+    }
+
+    private List<String> resolveArtifacts(Map buildConfig, String buildCmd, String defaultBuildCmd) {
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        List<String> configuredArtifacts = normalizeArtifacts(buildConfig?.artifacts ?: rawBuild.artifacts)
+        if (configuredArtifacts) {
+            return configuredArtifacts
+        }
+
+        if (buildCmd == defaultBuildCmd) {
+            return ["target/release/"]
+        }
+
+        return []
+    }
+
+    private List<String> normalizeArtifacts(def configuredArtifacts) {
+        if (!configuredArtifacts) {
+            return []
+        }
+
+        if (configuredArtifacts instanceof Collection) {
+            return configuredArtifacts.collect { it?.toString() }.findAll { it }
+        }
+
+        return [configuredArtifacts.toString()]
     }
 
     @Override

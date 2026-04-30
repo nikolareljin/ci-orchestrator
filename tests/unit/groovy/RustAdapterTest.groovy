@@ -1,6 +1,7 @@
 package io.ciorch.tests
 
 import io.ciorch.build.adapters.RustAdapter
+import io.ciorch.core.Config
 import io.ciorch.core.SystemCall
 import spock.lang.Specification
 
@@ -250,6 +251,44 @@ class RustAdapterTest extends Specification {
         then:
         result == true
         capturedCmd == 'cargo build --release --target x86_64-unknown-linux-musl'
+        adapter.getArtifacts().isEmpty()
+    }
+
+    def "build() uses explicit artifacts for custom build_command"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new RustAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([
+            build_command: "cargo build --release --target x86_64-unknown-linux-musl",
+            artifacts: ["target/x86_64-unknown-linux-musl/release/"]
+        ])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["target/x86_64-unknown-linux-musl/release/"]
+    }
+
+    def "build() uses artifacts from raw config for custom build_command"() {
+        given:
+        def config = new Config()
+        config.raw = [
+            ciorch: [
+                build: [
+                    artifacts: "target/debug/"
+                ]
+            ]
+        ]
+        def system = mockSystem(0)
+        def adapter = new RustAdapter(mockContext, system, config)
+
+        when:
+        boolean result = adapter.build([build_command: "cargo build"])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["target/debug/"]
     }
 
     def "getArtifacts() returns non-empty list after successful build"() {

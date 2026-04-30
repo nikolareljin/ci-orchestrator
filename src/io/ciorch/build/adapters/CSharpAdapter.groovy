@@ -66,15 +66,60 @@ class CSharpAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "dotnet publish -c Release -o publish/"
+        String defaultBuildCmd = "dotnet publish -c Release -o publish/"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            artifacts = ["publish/"]
+            artifacts = resolveArtifacts(buildConfig, buildCmd, defaultBuildCmd)
             return true
         }
         return false
+    }
+
+    private List<String> resolveArtifacts(Map buildConfig, String buildCmd, String defaultBuildCmd) {
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        List<String> configuredArtifacts = normalizeArtifacts(buildConfig?.artifacts ?: rawBuild.artifacts)
+        if (configuredArtifacts) {
+            return configuredArtifacts
+        }
+
+        String outputPath = extractOutputPath(buildCmd)
+        if (outputPath) {
+            return [outputPath]
+        }
+
+        if (buildCmd == defaultBuildCmd) {
+            return ["publish/"]
+        }
+
+        return []
+    }
+
+    private List<String> normalizeArtifacts(def configuredArtifacts) {
+        if (!configuredArtifacts) {
+            return []
+        }
+
+        if (configuredArtifacts instanceof Collection) {
+            return configuredArtifacts.collect { it?.toString() }.findAll { it }
+        }
+
+        return [configuredArtifacts.toString()]
+    }
+
+    private String extractOutputPath(String buildCmd) {
+        if (!buildCmd) {
+            return null
+        }
+
+        def matcher = buildCmd =~ /(?:^|\s)(?:-o\s+|--output(?:\s+|=))(["']?)([^"'\s]+)\1/
+        if (matcher.find()) {
+            return matcher.group(2)
+        }
+
+        return null
     }
 
     @Override

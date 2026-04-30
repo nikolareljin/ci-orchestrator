@@ -252,6 +252,36 @@ class CSharpAdapterTest extends Specification {
         then:
         result == true
         capturedCmd == 'dotnet publish -c Release -r linux-x64 -o out/'
+        adapter.getArtifacts() == ["out/"]
+    }
+
+    def "build() uses explicit artifacts when custom build_command has no output path"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new CSharpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([
+            build_command: "dotnet publish -c Release",
+            artifacts: ["custom-publish/"]
+        ])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["custom-publish/"]
+    }
+
+    def "build() leaves artifacts empty for custom build_command without output path or override"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new CSharpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([build_command: "dotnet publish -c Release"])
+
+        then:
+        result == true
+        adapter.getArtifacts().isEmpty()
     }
 
     def "getArtifacts() returns non-empty list after successful build"() {

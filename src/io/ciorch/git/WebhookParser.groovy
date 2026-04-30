@@ -1360,6 +1360,8 @@ class WebhookParser implements Serializable {
             BranchType.RELEASE,
             BranchType.DEVELOP,
             BranchType.MASTER,
+            BranchType.MAIN,
+            BranchType.TRUNK,
             BranchType.PLUGIN,
             BranchType.ENV_DEV,
             BranchType.ENV_QA,

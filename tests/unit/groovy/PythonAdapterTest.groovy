@@ -345,6 +345,43 @@ class PythonAdapterTest extends Specification {
         adapter.getArtifacts() == []
     }
 
+    def "build() with pip manager clears stale artifacts"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PythonAdapter(mockContext, system)
+        adapter.packageManager = "poetry"
+        adapter.build([:])
+        adapter.getArtifacts() == ["dist/"]
+
+        when:
+        adapter.packageManager = "pip"
+        boolean result = adapter.build([:])
+
+        then:
+        result == true
+        adapter.getArtifacts() == []
+    }
+
+    def "build() failure clears stale artifacts"() {
+        given:
+        int buildCount = 0
+        def system = mockSystem { String cmd ->
+            buildCount++
+            return buildCount == 1 ? 0 : 1
+        }
+        def adapter = new PythonAdapter(mockContext, system)
+        adapter.packageManager = "poetry"
+        adapter.build([:])
+        adapter.getArtifacts() == ["dist/"]
+
+        when:
+        boolean result = adapter.build([:])
+
+        then:
+        result == false
+        adapter.getArtifacts() == []
+    }
+
     def "build() uses custom build_command from buildConfig"() {
         given:
         def capturedCmd = null

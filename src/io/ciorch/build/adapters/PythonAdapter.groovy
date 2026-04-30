@@ -115,6 +115,7 @@ class PythonAdapter implements BuildAdapter {
         } else {
             // pip: no-op
             context?.echo("PythonAdapter: pip build — no distribution build step, skipping")
+            artifacts = []
             return true
         }
 
@@ -124,6 +125,7 @@ class PythonAdapter implements BuildAdapter {
             artifacts = ["dist/"]
             return true
         }
+        artifacts = []
         return false
     }
 

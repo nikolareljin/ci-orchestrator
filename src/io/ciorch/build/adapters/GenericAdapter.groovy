@@ -22,7 +22,8 @@ class GenericAdapter implements BuildAdapter {
     boolean prepare(Map buildConfig, def ctx) {
         this.context = ctx ?: this.context
 
-        // Fall back to raw build config from ciorch.yml when orchestrator passes [:]
+        // Fall back to raw build config from ciorch.yml because config.buildMap()
+        // intentionally omits raw keys such as install_command/prepare_command.
         Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
         String installCmd = buildConfig.install_command ?: buildConfig.prepare_command ?:
             rawBuild.install_command ?: rawBuild.prepare_command ?: null

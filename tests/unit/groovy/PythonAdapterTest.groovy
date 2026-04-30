@@ -1,6 +1,7 @@
 package io.ciorch.tests
 
 import io.ciorch.build.adapters.PythonAdapter
+import io.ciorch.core.Config
 import io.ciorch.core.SystemCall
 import spock.lang.Specification
 
@@ -406,6 +407,59 @@ class PythonAdapterTest extends Specification {
         then:
         result == true
         capturedCmd == 'poetry build --format wheel'
+    }
+
+    def "build() leaves artifacts empty for custom build_command without artifact override"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PythonAdapter(mockContext, system)
+        adapter.packageManager = "poetry"
+
+        when:
+        boolean result = adapter.build([build_command: "python -m build --wheel --outdir wheelhouse"])
+
+        then:
+        result == true
+        adapter.getArtifacts() == []
+    }
+
+    def "build() uses explicit artifacts for custom build_command"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PythonAdapter(mockContext, system)
+        adapter.packageManager = "poetry"
+
+        when:
+        boolean result = adapter.build([
+            build_command: "python -m build --wheel --outdir wheelhouse",
+            artifacts: ["wheelhouse/"]
+        ])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["wheelhouse/"]
+    }
+
+    def "build() uses artifacts from raw config for custom build_command"() {
+        given:
+        def config = new Config()
+        config.raw = [
+            ciorch: [
+                build: [
+                    artifacts: "custom-dist/"
+                ]
+            ]
+        ]
+        def system = mockSystem(0)
+        def adapter = new PythonAdapter(mockContext, system, config)
+        adapter.packageManager = "poetry"
+
+        when:
+        boolean result = adapter.build([build_command: "python -m build"])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["custom-dist/"]
     }
 
     def "getArtifacts() returns non-empty list after successful build"() {

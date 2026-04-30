@@ -104,14 +104,17 @@ class PythonAdapter implements BuildAdapter {
     @Override
     boolean build(Map buildConfig) {
         String defaultCmd = null
+        boolean usingDefaultBuild = false
         if (buildConfig.build_command) {
             defaultCmd = buildConfig.build_command
         } else if (config?.buildCommand) {
             defaultCmd = config.buildCommand
         } else if (packageManager == "poetry") {
             defaultCmd = "poetry build"
+            usingDefaultBuild = true
         } else if (packageManager == "uv") {
             defaultCmd = "uv build"
+            usingDefaultBuild = true
         } else {
             // pip: no-op
             context?.echo("PythonAdapter: pip build — no distribution build step, skipping")
@@ -122,11 +125,33 @@ class PythonAdapter implements BuildAdapter {
         def result = system.run_command(defaultCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            artifacts = ["dist/"]
+            artifacts = resolveArtifacts(buildConfig, usingDefaultBuild)
             return true
         }
         artifacts = []
         return false
+    }
+
+    private List<String> resolveArtifacts(Map buildConfig, boolean usingDefaultBuild) {
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        List<String> configuredArtifacts = normalizeArtifacts(buildConfig?.artifacts ?: rawBuild.artifacts)
+        if (configuredArtifacts) {
+            return configuredArtifacts
+        }
+
+        return usingDefaultBuild ? ["dist/"] : []
+    }
+
+    private List<String> normalizeArtifacts(def configuredArtifacts) {
+        if (!configuredArtifacts) {
+            return []
+        }
+
+        if (configuredArtifacts instanceof Collection) {
+            return configuredArtifacts.collect { it?.toString() }.findAll { it }
+        }
+
+        return [configuredArtifacts.toString()]
     }
 
     @Override

@@ -79,6 +79,7 @@ class NodeAdapter implements BuildAdapter {
     @Override
     boolean build(Map buildConfig) {
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "${packageManager} run build"
+        artifacts = []
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

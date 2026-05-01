@@ -218,6 +218,21 @@ class GenericAdapterTest extends Specification {
         result == false
     }
 
+    def "build() clears stale artifacts when build_command fails after a successful build"() {
+        given:
+        def results = [0, 1]
+        def system = mockSystem { String cmd -> results.remove(0) }
+        def adapter = new GenericAdapter(mockContext, system)
+        adapter.build([build_command: "make all", artifacts: ["dist/"]])
+
+        when:
+        boolean result = adapter.build([build_command: "make all", artifacts: ["dist/"]])
+
+        then:
+        result == false
+        adapter.getArtifacts().isEmpty()
+    }
+
     def "build() skips and returns true with empty artifacts when no build_command configured"() {
         given:
         def system = mockSystem(0)

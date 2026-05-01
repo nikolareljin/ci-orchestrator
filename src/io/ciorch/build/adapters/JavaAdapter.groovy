@@ -140,6 +140,7 @@ class JavaAdapter implements BuildAdapter {
         } else {
             buildCmd = "mvn package -DskipTests -q"
         }
+        artifacts = []
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

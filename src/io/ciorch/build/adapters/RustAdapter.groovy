@@ -82,6 +82,7 @@ class RustAdapter implements BuildAdapter {
     boolean build(Map buildConfig) {
         String defaultBuildCmd = "cargo build --release"
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
+        artifacts = []
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

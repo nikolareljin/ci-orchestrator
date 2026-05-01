@@ -88,6 +88,7 @@ class PhpAdapter implements BuildAdapter {
     @Override
     boolean build(Map buildConfig) {
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "composer install --no-dev --optimize-autoloader"
+        artifacts = []
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 

@@ -1376,7 +1376,7 @@ class WebhookParser implements Serializable {
         }
 
         if (this.isClosedPR || this.isForcedPush || this.isNewBranch || this.isOpenedPR || EventType.SYNC == this.actionType || this.isPush) {
-            if (this.dstType in allowedList || allowedList.contains(this.dstType)) {
+            if (this.dstType in allowedList) {
                 result = true
             }
         }

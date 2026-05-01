@@ -86,6 +86,8 @@ class CppAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
+        artifacts = []
+
         // Configure step: pass -G Ninja when ninja was detected in prepare()
         String generatorFlag = (buildBackend == "ninja") ? " -G Ninja" : ""
         def configureResult = system.run_command(

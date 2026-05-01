@@ -262,6 +262,24 @@ class CppAdapterTest extends Specification {
         capturedCmd == "cmake --build build --config Release --parallel 8"
     }
 
+    def "build() clears stale artifacts when build command fails after a successful build"() {
+        given:
+        def buildResults = [0, 1]
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("cmake -B build")) return 0
+            return buildResults.remove(0)
+        }
+        def adapter = new CppAdapter(mockContext, system)
+        adapter.build([:])
+
+        when:
+        boolean result = adapter.build([:])
+
+        then:
+        result == false
+        adapter.getArtifacts().isEmpty()
+    }
+
     def "getArtifacts() returns empty list before build"() {
         given:
         def system = mockSystem(0)

@@ -76,10 +76,10 @@ class GenericAdapter implements BuildAdapter {
     boolean build(Map buildConfig) {
         Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: rawBuild.build_command ?: null
+        artifacts = []
 
         if (!buildCmd) {
             context?.echo("GenericAdapter: no build_command configured, skipping build (non-fatal)")
-            artifacts = []
             return true
         }
 

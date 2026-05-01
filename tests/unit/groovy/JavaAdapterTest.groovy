@@ -429,6 +429,22 @@ class JavaAdapterTest extends Specification {
         capturedCmd == "mvn package -P production"
     }
 
+    def "build() clears stale artifacts when command fails after a successful build"() {
+        given:
+        def results = [0, 1]
+        def system = mockSystem { String cmd -> results.remove(0) }
+        def adapter = new JavaAdapter(mockContext, system)
+        adapter.buildTool = "maven"
+        adapter.build([:])
+
+        when:
+        boolean result = adapter.build([:])
+
+        then:
+        result == false
+        adapter.getArtifacts().isEmpty()
+    }
+
     def "getArtifacts() returns empty list before build"() {
         given:
         def system = mockSystem(0)

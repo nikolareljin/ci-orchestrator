@@ -78,16 +78,44 @@ class NodeAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "${packageManager} run build"
+        String defaultBuildCmd = "${packageManager} run build"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
+        boolean usingDefaultBuildCmd = (buildCmd == defaultBuildCmd)
+        List<String> configuredArtifacts = resolveConfiguredArtifacts(buildConfig)
         artifacts = []
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            artifacts = ["dist/"]
+            if (!configuredArtifacts.isEmpty()) {
+                artifacts = configuredArtifacts
+            } else if (usingDefaultBuildCmd) {
+                artifacts = ["dist/"]
+            }
             return true
         }
         return false
+    }
+
+    private List<String> resolveConfiguredArtifacts(Map buildConfig) {
+        def configuredArtifacts = buildConfig?.artifacts
+        if (configuredArtifacts == null) {
+            configuredArtifacts = config?.raw?.ciorch?.build?.artifacts
+        }
+
+        if (configuredArtifacts == null) {
+            return []
+        }
+
+        if (configuredArtifacts instanceof CharSequence) {
+            return [configuredArtifacts.toString()]
+        }
+
+        if (configuredArtifacts instanceof Collection) {
+            return configuredArtifacts.collect { it?.toString() }.findAll { it }
+        }
+
+        return [configuredArtifacts.toString()]
     }
 
     @Override

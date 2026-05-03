@@ -13,12 +13,12 @@ class ConfigTest extends Specification {
         config.buildAdapter == ""
     }
 
-    def "default branchingStrategy is gitflow"() {
+    def "default branchingStrategy is default-gitflow"() {
         when:
         Config config = new Config(null)
 
         then:
-        config.branchingStrategy == "gitflow"
+        config.branchingStrategy == "default-gitflow"
     }
 
     def "loadMap sets buildAdapter and deployAdapter"() {

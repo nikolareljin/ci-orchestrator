@@ -271,9 +271,13 @@ class JavaAdapterTest extends Specification {
         result == false
     }
 
-    def "lint() happy path returns true (gradle)"() {
+    def "lint() runs checkstyle tasks for gradle"() {
         given:
-        def system = mockSystem(0)
+        def capturedCmd = null
+        def system = mockSystem { String cmd ->
+            capturedCmd = cmd
+            return 0
+        }
         def adapter = new JavaAdapter(mockContext, system)
         adapter.buildTool = "gradle"
 
@@ -282,6 +286,7 @@ class JavaAdapterTest extends Specification {
 
         then:
         result == true
+        capturedCmd == "./gradlew checkstyleMain checkstyleTest -q"
     }
 
     def "lint() returns false when gradle check fails"() {

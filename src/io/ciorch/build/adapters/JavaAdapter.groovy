@@ -96,7 +96,7 @@ class JavaAdapter implements BuildAdapter {
         } else if (config?.lintCommand) {
             lintCmd = config.lintCommand
         } else if (buildTool == "gradle") {
-            lintCmd = "${gradleCmd} check -q"
+            lintCmd = "${gradleCmd} checkstyleMain checkstyleTest -q"
         } else {
             lintCmd = "mvn checkstyle:check -q"
         }

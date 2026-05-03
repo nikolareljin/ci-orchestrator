@@ -82,6 +82,46 @@ class GenericAdapterTest extends Specification {
         capturedCmd == "make deps"
     }
 
+    def "prepare() runs install_command before prepare_command when both are provided"() {
+        given:
+        def commands = []
+        def system = mockSystem { String cmd ->
+            commands << cmd
+            return 0
+        }
+        def adapter = new GenericAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([
+            install_command: "make install-deps",
+            prepare_command: "make prepare"
+        ], mockContext)
+
+        then:
+        result == true
+        commands == ["make install-deps", "make prepare"]
+    }
+
+    def "prepare() stops when install_command fails before prepare_command"() {
+        given:
+        def commands = []
+        def system = mockSystem { String cmd ->
+            commands << cmd
+            return cmd == "make install-deps" ? 1 : 0
+        }
+        def adapter = new GenericAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([
+            install_command: "make install-deps",
+            prepare_command: "make prepare"
+        ], mockContext)
+
+        then:
+        result == false
+        commands == ["make install-deps"]
+    }
+
     def "lint() runs lint_command when provided and returns true on success"() {
         given:
         def system = mockSystem(0)

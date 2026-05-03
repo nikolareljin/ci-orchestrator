@@ -22,20 +22,30 @@ class GenericAdapter implements BuildAdapter {
     boolean prepare(Map buildConfig, def ctx) {
         this.context = ctx ?: this.context
 
-        // Fall back to raw build config from ciorch.yml because config.buildMap()
-        // intentionally omits raw keys such as install_command/prepare_command.
         Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
-        String installCmd = buildConfig.install_command ?: buildConfig.prepare_command ?:
-            rawBuild.install_command ?: rawBuild.prepare_command ?: null
+        String installCmd = buildConfig.install_command ?: rawBuild.install_command ?: null
+        String prepareCmd = buildConfig.prepare_command ?: rawBuild.prepare_command ?: null
 
-        if (!installCmd) {
-            context?.echo("GenericAdapter: no install command configured, skipping prepare")
+        if (!installCmd && !prepareCmd) {
+            context?.echo("GenericAdapter: no install_command or prepare_command configured, skipping prepare")
             return true
         }
 
-        def result = system.run_command(installCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (installCmd) {
+            def installResult = system.run_command(installCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (installResult != 0) {
+                return false
+            }
+        }
 
-        return result == 0
+        if (prepareCmd) {
+            def prepareResult = system.run_command(prepareCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (prepareResult != 0) {
+                return false
+            }
+        }
+
+        return true
     }
 
     @Override

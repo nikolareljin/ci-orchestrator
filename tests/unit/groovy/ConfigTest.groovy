@@ -175,6 +175,40 @@ class ConfigTest extends Specification {
         config.getVersion("php_version") == "8.3"
     }
 
+    def "buildMap preserves adapter-specific build keys"() {
+        given:
+        Config config = new Config(null)
+        config.loadMap([
+            build: [
+                adapter:         "java",
+                build_tool:      "gradle",
+                install_command: "make deps",
+                prepare_command: "make prepare",
+                artifacts:       ["dist/", "reports/"],
+                lint_command:    "make lint",
+                test_command:    "make test",
+                build_command:   "make package",
+                java_version:    "21",
+                docker:          [enabled: true]
+            ]
+        ])
+
+        when:
+        Map build = config.buildMap()
+
+        then:
+        build.build_tool == "gradle"
+        build.install_command == "make deps"
+        build.prepare_command == "make prepare"
+        build.artifacts == ["dist/", "reports/"]
+        build.lint_command == "make lint"
+        build.test_command == "make test"
+        build.build_command == "make package"
+        build.java_version == "21"
+        !build.containsKey("adapter")
+        !build.containsKey("docker")
+    }
+
     def "loadMap sets customMatrixPath from branching.custom_matrix"() {
         given:
         Config config = new Config(null)

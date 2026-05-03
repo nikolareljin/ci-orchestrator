@@ -71,6 +71,7 @@ class Config implements Serializable {
     // Load from a Map directly (useful for testing)
     boolean loadMap(Map ciorch) {
         this.data = ciorch
+        this.raw = [ciorch: ciorch]
         _populate(ciorch)
         return true
     }
@@ -117,7 +118,9 @@ class Config implements Serializable {
 
     // Returns build config keys in the snake_case form adapters expect
     Map buildMap() {
-        Map m = [:]
+        Map m = ((data.build ?: [:]) as Map).findAll { k, v ->
+            !(k.toString() in ["adapter", "docker"])
+        }
         if (lintCommand)  m.lint_command  = lintCommand
         if (testCommand)  m.test_command  = testCommand
         if (buildCommand) m.build_command = buildCommand

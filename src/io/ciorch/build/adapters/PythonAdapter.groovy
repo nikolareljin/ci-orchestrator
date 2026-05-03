@@ -40,11 +40,21 @@ class PythonAdapter implements BuildAdapter {
         // Detect package manager
         def hasPoetryLock = system.run_command("test -f pyproject.toml && test -f poetry.lock", SystemCall.SHOW_COMMAND_STATUS_VALUE)
         if (hasPoetryLock == 0) {
+            def poetryResult = system.run_command("poetry --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (poetryResult != 0) {
+                context?.echo("PythonAdapter: poetry.lock found but poetry is not in PATH")
+                return false
+            }
             this.packageManager = "poetry"
             context?.echo("PythonAdapter: detected package manager: poetry")
         } else {
             def hasUvLock = system.run_command("test -f pyproject.toml && test -f uv.lock", SystemCall.SHOW_COMMAND_STATUS_VALUE)
             if (hasUvLock == 0) {
+                def uvResult = system.run_command("uv --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                if (uvResult != 0) {
+                    context?.echo("PythonAdapter: uv.lock found but uv is not in PATH")
+                    return false
+                }
                 this.packageManager = "uv"
                 context?.echo("PythonAdapter: detected package manager: uv")
             } else {

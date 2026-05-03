@@ -86,28 +86,52 @@ class CppAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
+        String defaultBuildCmd = "cmake --build build --parallel 4"
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
         artifacts = []
 
-        // Configure step: pass -G Ninja when ninja was detected in prepare()
-        String generatorFlag = (buildBackend == "ninja") ? " -G Ninja" : ""
-        def configureResult = system.run_command(
-            "cmake -B build -DCMAKE_BUILD_TYPE=Release${generatorFlag}",
-            SystemCall.SHOW_COMMAND_STATUS_VALUE
-        )
-        if (configureResult != 0) {
-            context?.echo("CppAdapter: cmake configure failed")
-            return false
+        if (buildCmd == defaultBuildCmd) {
+            // Configure step: pass -G Ninja when ninja was detected in prepare()
+            String generatorFlag = (buildBackend == "ninja") ? " -G Ninja" : ""
+            def configureResult = system.run_command(
+                "cmake -B build -DCMAKE_BUILD_TYPE=Release${generatorFlag}",
+                SystemCall.SHOW_COMMAND_STATUS_VALUE
+            )
+            if (configureResult != 0) {
+                context?.echo("CppAdapter: cmake configure failed")
+                return false
+            }
         }
-
-        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: "cmake --build build --parallel 4"
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            artifacts = ["build/"]
+            artifacts = resolveArtifacts(buildConfig, buildCmd, defaultBuildCmd)
             return true
         }
         return false
+    }
+
+    private List<String> resolveArtifacts(Map buildConfig, String buildCmd, String defaultBuildCmd) {
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        List<String> configuredArtifacts = normalizeArtifacts(buildConfig?.artifacts ?: rawBuild.artifacts)
+        if (configuredArtifacts) {
+            return configuredArtifacts
+        }
+
+        return (buildCmd == defaultBuildCmd) ? ["build/"] : []
+    }
+
+    private List<String> normalizeArtifacts(def configuredArtifacts) {
+        if (!configuredArtifacts) {
+            return []
+        }
+
+        if (configuredArtifacts instanceof Collection) {
+            return configuredArtifacts.collect { it?.toString() }.findAll { it }
+        }
+
+        return [configuredArtifacts.toString()]
     }
 
     @Override

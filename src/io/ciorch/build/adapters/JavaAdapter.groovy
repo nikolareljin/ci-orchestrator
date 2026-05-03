@@ -130,25 +130,50 @@ class JavaAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
+        String defaultBuildCmd = (buildTool == "gradle") ? "${gradleCmd} build -x test" : "mvn package -DskipTests -q"
         String buildCmd
         if (buildConfig.build_command) {
             buildCmd = buildConfig.build_command
         } else if (config?.buildCommand) {
             buildCmd = config.buildCommand
-        } else if (buildTool == "gradle") {
-            buildCmd = "${gradleCmd} build -x test"
         } else {
-            buildCmd = "mvn package -DskipTests -q"
+            buildCmd = defaultBuildCmd
         }
         artifacts = []
 
         def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
-            artifacts = (buildTool == "gradle") ? ["build/libs/"] : ["target/"]
+            artifacts = resolveArtifacts(buildConfig, buildCmd, defaultBuildCmd)
             return true
         }
         return false
+    }
+
+    private List<String> resolveArtifacts(Map buildConfig, String buildCmd, String defaultBuildCmd) {
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        List<String> configuredArtifacts = normalizeArtifacts(buildConfig?.artifacts ?: rawBuild.artifacts)
+        if (configuredArtifacts) {
+            return configuredArtifacts
+        }
+
+        if (buildCmd == defaultBuildCmd) {
+            return (buildTool == "gradle") ? ["build/libs/"] : ["target/"]
+        }
+
+        return []
+    }
+
+    private List<String> normalizeArtifacts(def configuredArtifacts) {
+        if (!configuredArtifacts) {
+            return []
+        }
+
+        if (configuredArtifacts instanceof Collection) {
+            return configuredArtifacts.collect { it?.toString() }.findAll { it }
+        }
+
+        return [configuredArtifacts.toString()]
     }
 
     @Override

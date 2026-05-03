@@ -427,6 +427,23 @@ class JavaAdapterTest extends Specification {
         then:
         result == true
         capturedCmd == "mvn package -P production"
+        adapter.getArtifacts().isEmpty()
+    }
+
+    def "build() uses explicit artifacts for custom build_command"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new JavaAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([
+            build_command: "mvn package -P production",
+            artifacts: ["custom-target/"]
+        ])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["custom-target/"]
     }
 
     def "build() clears stale artifacts when command fails after a successful build"() {

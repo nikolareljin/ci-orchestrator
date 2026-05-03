@@ -293,6 +293,23 @@ class PhpAdapterTest extends Specification {
         then:
         result == true
         capturedCmd == 'composer install'
+        adapter.getArtifacts().isEmpty()
+    }
+
+    def "build() uses explicit artifacts for custom build_command"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PhpAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([
+            build_command: "composer archive",
+            artifacts: ["release/"]
+        ])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["release/"]
     }
 
     def "getArtifacts() returns non-empty list after successful build"() {

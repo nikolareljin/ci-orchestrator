@@ -61,6 +61,7 @@ class PythonAdapterTest extends Specification {
         def system = mockSystem { String cmd ->
             if (cmd.contains("python3 --version")) return 0
             if (cmd.contains("poetry.lock")) return 0
+            if (cmd.contains("poetry --version")) return 0
             return 1
         }
         def adapter = new PythonAdapter(mockContext, system)
@@ -72,12 +73,30 @@ class PythonAdapterTest extends Specification {
         adapter.packageManager == "poetry"
     }
 
+    def "prepare() returns false when poetry lock exists but poetry is unavailable"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("python3 --version")) return 0
+            if (cmd.contains("poetry.lock")) return 0
+            if (cmd.contains("poetry --version")) return 1
+            return 1
+        }
+        def adapter = new PythonAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == false
+    }
+
     def "prepare() detects uv when pyproject.toml and uv.lock are present"() {
         given:
         def system = mockSystem { String cmd ->
             if (cmd.contains("python3 --version")) return 0
             if (cmd.contains("poetry.lock")) return 1
             if (cmd.contains("uv.lock")) return 0
+            if (cmd.contains("uv --version")) return 0
             return 1
         }
         def adapter = new PythonAdapter(mockContext, system)
@@ -87,6 +106,24 @@ class PythonAdapterTest extends Specification {
 
         then:
         adapter.packageManager == "uv"
+    }
+
+    def "prepare() returns false when uv lock exists but uv is unavailable"() {
+        given:
+        def system = mockSystem { String cmd ->
+            if (cmd.contains("python3 --version")) return 0
+            if (cmd.contains("poetry.lock")) return 1
+            if (cmd.contains("uv.lock")) return 0
+            if (cmd.contains("uv --version")) return 1
+            return 1
+        }
+        def adapter = new PythonAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.prepare([:], mockContext)
+
+        then:
+        result == false
     }
 
     def "prepare() defaults to pip when no lock files found"() {

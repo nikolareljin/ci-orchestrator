@@ -238,16 +238,23 @@ class CppAdapterTest extends Specification {
     def "build() uses custom build_command from buildConfig"() {
         given:
         def capturedCmd = null
+        def configureRan = false
         def system = new SystemCall(null, "", "", "", "") {
             @Override
             def run_command(String cmd, int mode) {
-                if (cmd.contains("cmake -B build")) return 0
+                if (cmd.contains("cmake -B build")) {
+                    configureRan = true
+                    return 0
+                }
                 capturedCmd = cmd
                 return 0
             }
             @Override
             def run_command(String cmd, int mode, int timeout) {
-                if (cmd.contains("cmake -B build")) return 0
+                if (cmd.contains("cmake -B build")) {
+                    configureRan = true
+                    return 0
+                }
                 capturedCmd = cmd
                 return 0
             }
@@ -260,6 +267,24 @@ class CppAdapterTest extends Specification {
         then:
         result == true
         capturedCmd == "cmake --build build --config Release --parallel 8"
+        configureRan == false
+        adapter.getArtifacts().isEmpty()
+    }
+
+    def "build() uses explicit artifacts for custom build_command"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new CppAdapter(mockContext, system)
+
+        when:
+        boolean result = adapter.build([
+            build_command: "ninja -C out",
+            artifacts: ["out/"]
+        ])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["out/"]
     }
 
     def "build() clears stale artifacts when build command fails after a successful build"() {

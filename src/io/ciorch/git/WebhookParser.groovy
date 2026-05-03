@@ -1360,6 +1360,8 @@ class WebhookParser implements Serializable {
             BranchType.RELEASE,
             BranchType.DEVELOP,
             BranchType.MASTER,
+            BranchType.MAIN,
+            BranchType.TRUNK,
             BranchType.PLUGIN,
             BranchType.ENV_DEV,
             BranchType.ENV_QA,
@@ -1373,8 +1375,8 @@ class WebhookParser implements Serializable {
             return false
         }
 
-        if (this.isClosedPR || this.isForcedPush || this.isNewBranch || this.isOpenedPR || EventType.SYNC == this.actionType) {
-            if (this.dstType in allowedList || allowedList.contains(this.dstType)) {
+        if (this.isClosedPR || this.isForcedPush || this.isNewBranch || this.isOpenedPR || EventType.SYNC == this.actionType || this.isPush) {
+            if (this.dstType in allowedList) {
                 result = true
             }
         }
@@ -1387,11 +1389,6 @@ class WebhookParser implements Serializable {
         // Closed PR without a merge => skip.
         if (EventType.CLOSED_PR == this.actionType && !this.isMerged) {
             result = false
-        }
-
-        // Push to environment branches is always processed.
-        if (this.dstType in [BranchType.ENV_DEV, BranchType.ENV_QA] && this.isPush) {
-            result = true
         }
 
         this.context.echo("** Process this job? Answer: ${result.toString()}" as String)

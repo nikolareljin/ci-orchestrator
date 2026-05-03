@@ -3,9 +3,9 @@
   <h1>ci-orchestrator</h1>
   <p>Multi-platform CI/CD orchestration library for Jenkins, GitHub Actions, GitLab CI, and Bitbucket Pipelines.<br/>Build any language stack. Deploy to any CMS or framework.</p>
 
-  [![Tests](https://img.shields.io/badge/tests-81%20passing-brightgreen)](#running-tests)
+  [![Tests](https://img.shields.io/badge/tests-261%20passing-brightgreen)](#running-tests)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-  [![Phase](https://img.shields.io/badge/phase-1%20Jenkins%20Core-blue)](#platform-status)
+  [![Phase](https://img.shields.io/badge/phase-2%20Build%20Adapters-blue)](#platform-status)
   [![Groovy](https://img.shields.io/badge/Groovy-3.0-4298B8?logo=apache-groovy&logoColor=white)](https://groovy-lang.org/)
   [![Jenkins](https://img.shields.io/badge/Jenkins-2.x-D24939?logo=jenkins&logoColor=white)](https://www.jenkins.io/)
 </div>
@@ -20,9 +20,9 @@ Instead of writing a `Jenkinsfile` from scratch for every project, you declare *
 
 - **Data-driven pipelines** — branching rules are YAML, not code. Swap strategies (`gitflow`, `github-flow`, `trunk-based`) without touching your `Jenkinsfile`.
 - **Adapter pattern** — plug in any build toolchain (Node, PHP, Go, Java, Python, Rust, Docker…) or deploy target (WordPress, Drupal, Symfony, Django, FastAPI…) via a single interface.
-- **Shell-injection safe** — all external values are passed through `withEnv` + single-quoted shell variables, never interpolated into Groovy strings.
+- **Shell-injection aware** — external values are generally passed through `withEnv` + single-quoted shell variables; however, user-configured command overrides such as `lint_command`, `test_command`, and `build_command` are trusted config and executed verbatim when set.
 - **Jenkins CPS compliant** — all classes implement `Serializable`; regex and split operations are annotated `@NonCPS`.
-- **Testable** — 81 unit tests (Spock + JenkinsPipelineUnit) run without a live Jenkins instance.
+- **Testable** — 261 unit tests (Spock + JenkinsPipelineUnit) run without a live Jenkins instance.
 - **Single config file** — `ciorch.yml` at repo root is read by every supported platform.
 
 ## Platform Status
@@ -112,15 +112,15 @@ The branching strategy YAML (`resources/matrix/default-gitflow.yml`) controls wh
 | Adapter | Language | Phase |
 |---|---|---|
 | `docker` | Generic Docker build | ✅ 1 |
-| `node` | Node.js / npm / yarn | 🔜 2 |
-| `php` | PHP / Composer | 🔜 2 |
-| `python` | Python / pip | 🔜 2 |
-| `go` | Go modules | 🔜 2 |
-| `java-maven` | Java + Maven | 🔜 2 |
-| `java-gradle` | Java + Gradle | 🔜 2 |
-| `dotnet` | .NET / C# | 🔜 2 |
-| `rust` | Rust / Cargo | 🔜 2 |
-| `cpp` | C/C++ / CMake | 🔜 2 |
+| `node` | Node.js / npm / yarn / pnpm | ✅ 2 |
+| `php` | PHP / Composer | ✅ 2 |
+| `python` | Python / pip / poetry / uv | ✅ 2 |
+| `go` | Go modules | ✅ 2 |
+| `java` | Java + Maven / Gradle | ✅ 2 |
+| `csharp` | .NET / C# | ✅ 2 |
+| `rust` | Rust / Cargo | ✅ 2 |
+| `cpp` | C/C++ / CMake | ✅ 2 |
+| `generic` | Any (shell commands from config) | ✅ 2 |
 
 ## Supported Deploy Adapters
 
@@ -140,7 +140,7 @@ The branching strategy YAML (`resources/matrix/default-gitflow.yml`) controls wh
 ./gradlew :tests:unit:test
 ```
 
-Tests use [JenkinsPipelineUnit](https://github.com/jenkinsci/JenkinsPipelineUnit) + [Spock](https://spockframework.org/) and run without a live Jenkins instance. 81 tests covering `Version`, `MatrixEvaluator`, `WebhookParser`, and `Config`.
+Tests use [JenkinsPipelineUnit](https://github.com/jenkinsci/JenkinsPipelineUnit) + [Spock](https://spockframework.org/) and run without a live Jenkins instance. 261 tests covering all adapters, `Version`, `MatrixEvaluator`, `WebhookParser`, and `Config`.
 
 ## Documentation
 

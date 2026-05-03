@@ -21,7 +21,7 @@ class Config implements Serializable {
     Map deployEnvironments = [:]    // environment name → {host, user, path}
 
     // Branching
-    String branchingStrategy = "gitflow"  // gitflow|github-flow|trunk-based|custom
+    String branchingStrategy = "default-gitflow"  // default-gitflow|github-flow|trunk-based|custom
     String customMatrixPath = ""
 
     // Notifications
@@ -71,6 +71,7 @@ class Config implements Serializable {
     // Load from a Map directly (useful for testing)
     boolean loadMap(Map ciorch) {
         this.data = ciorch
+        this.raw = [ciorch: ciorch]
         _populate(ciorch)
         return true
     }
@@ -99,7 +100,7 @@ class Config implements Serializable {
         deployEnvironments = (deploy.environments ?: [:]) as Map
 
         Map branching = (ciorch.branching ?: [:]) as Map
-        branchingStrategy = (branching.strategy ?: "gitflow") as String
+        branchingStrategy = (branching.strategy ?: "default-gitflow") as String
         customMatrixPath = (branching.custom_matrix ?: "") as String
 
         Map notify = (ciorch.notify ?: [:]) as Map
@@ -113,6 +114,20 @@ class Config implements Serializable {
         gitleaksEnabled = (security.gitleaks ?: false) as boolean
 
         platformOverrides = (ciorch.platform ?: [:]) as Map
+    }
+
+    // Returns build config keys in the snake_case form adapters expect
+    Map buildMap() {
+        Map build = (data.build ?: [:]) as Map
+        Map m = build.findAll { k, v -> k.toString() != "adapter" }
+        Map docker = (build.docker ?: [:]) as Map
+        m.remove("docker")
+        m.putAll(docker)
+        if (lintCommand)  m.lint_command  = lintCommand
+        if (testCommand)  m.test_command  = testCommand
+        if (buildCommand) m.build_command = buildCommand
+        m.putAll(toolVersions ?: [:])
+        return m
     }
 
     // Get deploy environment config by name

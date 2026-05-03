@@ -29,6 +29,18 @@ def call(Map args = [:]) {
         echo "ciorch: ciorch.yml not found at ${configPath}, using defaults"
     }
 
+    // Allow preset vars (e.g. ciorch_node) to supply a default adapter when ciorch.yml
+    // does not specify one. Set the property directly to preserve all other loaded config.
+    if (args.adapter && !config.buildAdapter) {
+        config.buildAdapter = args.adapter as String
+    }
+
+    // Apply per-run command and version overrides from args (e.g. from ciorch_node(lint_command: ...))
+    if (args.lint_command)  config.lintCommand  = args.lint_command  as String
+    if (args.test_command)  config.testCommand  = args.test_command  as String
+    if (args.build_command) config.buildCommand = args.build_command as String
+    args.each { k, v -> if (k.toString().endsWith('_version')) config.toolVersions[k.toString()] = v }
+
     // Initialize system call helper
     SystemCall system = new SystemCall(
         this,

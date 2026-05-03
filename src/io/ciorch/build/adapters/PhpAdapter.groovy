@@ -57,15 +57,10 @@ class PhpAdapter implements BuildAdapter {
                 return false
             }
         } else {
-            def srcCheck = system.run_command("test -d src", SystemCall.SHOW_COMMAND_STATUS_VALUE)
-            if (srcCheck != 0) {
-                context?.echo("PhpAdapter: src/ not found, skipping php -l fallback")
-                return true
-            }
-            // php -l requires individual files; iterate all .php files under src/
-            context?.echo("PhpAdapter: vendor/bin/phpcs not found, falling back to php -l on src/ files")
+            // php -l requires individual files; scan the repository while skipping vendor dependencies.
+            context?.echo("PhpAdapter: vendor/bin/phpcs not found, falling back to php -l on repository PHP files")
             def result = system.run_command(
-                "find src -type f -name '*.php' -exec sh -c 'for f do php -l \"\$f\" || exit 1; done' sh {} +",
+                "find . -path ./vendor -prune -o -type f -name '*.php' -exec sh -c 'for f do php -l \"\$f\" || exit 1; done' sh {} +",
                 SystemCall.SHOW_COMMAND_STATUS_VALUE
             )
             if (result != 0) {

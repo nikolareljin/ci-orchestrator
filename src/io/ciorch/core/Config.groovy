@@ -118,9 +118,11 @@ class Config implements Serializable {
 
     // Returns build config keys in the snake_case form adapters expect
     Map buildMap() {
-        Map m = ((data.build ?: [:]) as Map).findAll { k, v ->
-            !(k.toString() in ["adapter", "docker"])
-        }
+        Map build = (data.build ?: [:]) as Map
+        Map m = build.findAll { k, v -> k.toString() != "adapter" }
+        Map docker = (build.docker ?: [:]) as Map
+        m.remove("docker")
+        m.putAll(docker)
         if (lintCommand)  m.lint_command  = lintCommand
         if (testCommand)  m.test_command  = testCommand
         if (buildCommand) m.build_command = buildCommand

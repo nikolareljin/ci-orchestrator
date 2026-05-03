@@ -189,7 +189,13 @@ class ConfigTest extends Specification {
                 test_command:    "make test",
                 build_command:   "make package",
                 java_version:    "21",
-                docker:          [enabled: true]
+                docker:          [
+                    enabled: true,
+                    tag: "v1",
+                    dockerfile: "deploy/Dockerfile",
+                    context: ".",
+                    build_args: [APP_ENV: "prod"]
+                ]
             ]
         ])
 
@@ -205,6 +211,11 @@ class ConfigTest extends Specification {
         build.test_command == "make test"
         build.build_command == "make package"
         build.java_version == "21"
+        build.enabled == true
+        build.tag == "v1"
+        build.dockerfile == "deploy/Dockerfile"
+        build.context == "."
+        build.build_args == [APP_ENV: "prod"]
         !build.containsKey("adapter")
         !build.containsKey("docker")
     }

@@ -460,6 +460,20 @@ class PythonAdapterTest extends Specification {
         adapter.getArtifacts() == []
     }
 
+    def "build() keeps default artifacts when explicit build_command matches poetry default"() {
+        given:
+        def system = mockSystem(0)
+        def adapter = new PythonAdapter(mockContext, system)
+        adapter.packageManager = "poetry"
+
+        when:
+        boolean result = adapter.build([build_command: "poetry build"])
+
+        then:
+        result == true
+        adapter.getArtifacts() == ["dist/"]
+    }
+
     def "build() uses explicit artifacts for custom build_command"() {
         given:
         def system = mockSystem(0)

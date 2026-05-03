@@ -113,26 +113,24 @@ class PythonAdapter implements BuildAdapter {
 
     @Override
     boolean build(Map buildConfig) {
-        String defaultCmd = null
-        boolean usingDefaultBuild = false
-        if (buildConfig.build_command) {
-            defaultCmd = buildConfig.build_command
-        } else if (config?.buildCommand) {
-            defaultCmd = config.buildCommand
-        } else if (packageManager == "poetry") {
-            defaultCmd = "poetry build"
-            usingDefaultBuild = true
+        String defaultBuildCmd = null
+        if (packageManager == "poetry") {
+            defaultBuildCmd = "poetry build"
         } else if (packageManager == "uv") {
-            defaultCmd = "uv build"
-            usingDefaultBuild = true
-        } else {
+            defaultBuildCmd = "uv build"
+        }
+
+        if (!defaultBuildCmd && !buildConfig.build_command && !config?.buildCommand) {
             // pip: no-op
             context?.echo("PythonAdapter: pip build — no distribution build step, skipping")
             artifacts = []
             return true
         }
 
-        def result = system.run_command(defaultCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
+        boolean usingDefaultBuild = (buildCmd == defaultBuildCmd)
+
+        def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
 
         if (result == 0) {
             artifacts = resolveArtifacts(buildConfig, usingDefaultBuild)

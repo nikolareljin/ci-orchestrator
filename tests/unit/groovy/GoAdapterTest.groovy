@@ -296,6 +296,22 @@ class GoAdapterTest extends Specification {
         artifacts.isEmpty()
     }
 
+    def "build() clears stale artifacts before a failed build"() {
+        given:
+        def system = mockSystem(1)
+        def adapter = new GoAdapter(mockContext, system)
+        def field = GoAdapter.class.getDeclaredField("artifacts")
+        field.accessible = true
+        field.set(adapter, ["bin/app"])
+
+        when:
+        boolean result = adapter.build([:])
+
+        then:
+        result == false
+        adapter.getArtifacts().isEmpty()
+    }
+
     def "getName() returns 'go'"() {
         given:
         def system = mockSystem(0)

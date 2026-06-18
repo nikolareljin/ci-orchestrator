@@ -185,3 +185,11 @@ Please open an issue before starting work on large features so we can discuss th
 ## License
 
 [MIT](LICENSE)
+
+---
+
+## Clone traffic
+
+![Clone traffic](https://raw.githubusercontent.com/nikolareljin/stats/main/charts/ci-orchestrator.svg)
+
+_Updated daily. Total and unique cloners over the last 14 days._

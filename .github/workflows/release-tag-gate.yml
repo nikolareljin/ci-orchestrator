@@ -1,0 +1,14 @@
+name: Release Tag Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release_tag_available:
+    uses: nikolareljin/ci-helpers/.github/workflows/release-tag-gate.yml@production
+    with:
+      default_branch: main

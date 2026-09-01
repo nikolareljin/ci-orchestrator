@@ -1,0 +1,69 @@
+# ci-orchestrator Node.js standard branching matrix
+# Matching rules are selected by priority; higher numbers take precedence.
+# File order does not control evaluation.
+
+branch_patterns:
+  feature: "^feature/"
+  develop: "^develop$"
+  release: "^release/"
+  master:  "^(master|main)$"
+
+rules:
+  # ---- feature/* + open PR → lint + test ----
+
+  - id: "node-feature-open-pr"
+    src_branch: "feature"
+    dst_branch: null
+    event: "opened"
+    tasks: [lint, test]
+    priority: 100
+
+  - id: "node-feature-sync-pr"
+    src_branch: "feature"
+    dst_branch: null
+    event: "synchronize"
+    tasks: [lint, test]
+    priority: 99
+
+  # ---- develop + push → lint + test + build ----
+
+  - id: "node-develop-push"
+    src_branch: "develop"
+    dst_branch: "develop"
+    event: "push"
+    tasks: [lint, test, build]
+    priority: 90
+
+  - id: "node-develop-merged"
+    src_branch: null
+    dst_branch: "develop"
+    event: "closed"
+    merged: true
+    tasks: [lint, test, build]
+    priority: 89
+
+  # ---- release/* merged PR to main/master → lint + test + build ----
+
+  - id: "node-release-master-merged-pr"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "closed"
+    merged: true
+    tasks: [lint, test, build]
+    priority: 80
+
+  - id: "node-release-master-open-pr"
+    src_branch: "release"
+    dst_branch: "master"
+    event: "opened"
+    tasks: [lint, test]
+    priority: 79
+
+  # ---- main/master + push → lint + test + build + deploy ----
+
+  - id: "node-master-push"
+    src_branch: "master"
+    dst_branch: "master"
+    event: "push"
+    tasks: [lint, test, build, deploy]
+    priority: 70

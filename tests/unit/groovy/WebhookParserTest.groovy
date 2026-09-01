@@ -175,4 +175,39 @@ class WebhookParserTest extends Specification {
         parser.srcType == BranchType.SPRINT
         parser.dstType == BranchType.DEVELOP
     }
+
+    @Unroll
+    def "processJob() allows push events to #branch"() {
+        given:
+        Map payload = [
+            ref: "refs/heads/${branch}",
+            before: "abc123",
+            after: "def456",
+            repository: [
+                name: "repo",
+                clone_url: "https://github.com/org/repo.git",
+                pushed_at: "2026-04-30T00:00:00Z",
+            ],
+            head_commit: [
+                id: "def456",
+                message: "Update ${branch}",
+                url: "https://github.com/org/repo/commit/def456",
+            ],
+            sender: [login: "dev", avatar_url: ""]
+        ]
+        WebhookParser parser = new WebhookParser(mockContext, payload)
+
+        when:
+        parser.setValues(false)
+
+        then:
+        parser.isPush == true
+        parser.dstType == expectedType
+        parser.shouldBeProcessed == true
+
+        where:
+        branch  | expectedType
+        "main"  | BranchType.MAIN
+        "trunk" | BranchType.TRUNK
+    }
 }

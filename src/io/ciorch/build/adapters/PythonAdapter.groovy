@@ -1,0 +1,174 @@
+package io.ciorch.build.adapters
+
+import java.io.Serializable
+import io.ciorch.build.BuildAdapter
+import io.ciorch.core.SystemCall
+import io.ciorch.core.Config
+
+class PythonAdapter implements BuildAdapter {
+    def context = null
+    SystemCall system = null
+    Config config = null
+
+    String packageManager = "pip"
+    private String pythonCmd = "python3"
+
+    private List<String> artifacts = []
+
+    PythonAdapter(def context, SystemCall system, Config cfg = null) {
+        this.context = context
+        this.system = system
+        this.config = cfg
+    }
+
+    @Override
+    boolean prepare(Map buildConfig, def ctx) {
+        this.context = ctx ?: this.context
+
+        def result = system.run_command("python3 --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (result != 0) {
+            result = system.run_command("python --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("PythonAdapter: python3/python not found in PATH")
+                return false
+            }
+            this.pythonCmd = "python"
+        } else {
+            this.pythonCmd = "python3"
+        }
+
+        // Detect package manager
+        def hasPoetryLock = system.run_command("test -f pyproject.toml && test -f poetry.lock", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (hasPoetryLock == 0) {
+            def poetryResult = system.run_command("poetry --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (poetryResult != 0) {
+                context?.echo("PythonAdapter: poetry.lock found but poetry is not in PATH")
+                return false
+            }
+            this.packageManager = "poetry"
+            context?.echo("PythonAdapter: detected package manager: poetry")
+        } else {
+            def hasUvLock = system.run_command("test -f pyproject.toml && test -f uv.lock", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (hasUvLock == 0) {
+                def uvResult = system.run_command("uv --version", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+                if (uvResult != 0) {
+                    context?.echo("PythonAdapter: uv.lock found but uv is not in PATH")
+                    return false
+                }
+                this.packageManager = "uv"
+                context?.echo("PythonAdapter: detected package manager: uv")
+            } else {
+                this.packageManager = "pip"
+                context?.echo("PythonAdapter: detected package manager: pip")
+            }
+        }
+
+        return true
+    }
+
+    @Override
+    boolean lint(Map buildConfig) {
+        String overrideCmd = buildConfig.lint_command ?: config?.lintCommand
+        if (overrideCmd) {
+            def result = system.run_command(overrideCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("PythonAdapter: lint failed")
+                return false
+            }
+            return true
+        }
+
+        def ruffCheck = system.run_command("which ruff", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (ruffCheck == 0) {
+            def result = system.run_command("ruff check .", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("PythonAdapter: ruff check failed")
+                return false
+            }
+            return true
+        }
+
+        def flake8Check = system.run_command("which flake8", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+        if (flake8Check == 0) {
+            def result = system.run_command("flake8 .", SystemCall.SHOW_COMMAND_STATUS_VALUE)
+            if (result != 0) {
+                context?.echo("PythonAdapter: flake8 failed")
+                return false
+            }
+            return true
+        }
+
+        context?.echo("PythonAdapter: no linter found (ruff, flake8), skipping lint (non-fatal)")
+        return true
+    }
+
+    @Override
+    boolean test(Map buildConfig) {
+        String testCmd = buildConfig.test_command ?: config?.testCommand ?: "${pythonCmd} -m pytest"
+
+        def result = system.run_command(testCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+
+        return result == 0
+    }
+
+    @Override
+    boolean build(Map buildConfig) {
+        String defaultBuildCmd = null
+        if (packageManager == "poetry") {
+            defaultBuildCmd = "poetry build"
+        } else if (packageManager == "uv") {
+            defaultBuildCmd = "uv build"
+        }
+
+        if (!defaultBuildCmd && !buildConfig.build_command && !config?.buildCommand) {
+            // pip: no-op
+            context?.echo("PythonAdapter: pip build — no distribution build step, skipping")
+            artifacts = []
+            return true
+        }
+
+        String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
+        boolean usingDefaultBuild = (buildCmd == defaultBuildCmd)
+
+        def result = system.run_command(buildCmd, SystemCall.SHOW_COMMAND_STATUS_VALUE)
+
+        if (result == 0) {
+            artifacts = resolveArtifacts(buildConfig, usingDefaultBuild)
+            return true
+        }
+        artifacts = []
+        return false
+    }
+
+    private List<String> resolveArtifacts(Map buildConfig, boolean usingDefaultBuild) {
+        Map rawBuild = (config?.raw?.ciorch?.build ?: [:]) as Map
+        List<String> configuredArtifacts = normalizeArtifacts(buildConfig?.artifacts ?: rawBuild.artifacts)
+        if (configuredArtifacts) {
+            return configuredArtifacts
+        }
+
+        return usingDefaultBuild ? ["dist/"] : []
+    }
+
+    private List<String> normalizeArtifacts(def configuredArtifacts) {
+        if (!configuredArtifacts) {
+            return []
+        }
+
+        if (configuredArtifacts instanceof Collection) {
+            return configuredArtifacts.collect { it?.toString() }.findAll { it }
+        }
+
+        return [configuredArtifacts.toString()]
+    }
+
+    @Override
+    List<String> getArtifacts() {
+        return artifacts
+    }
+
+    @Override
+    String getName() {
+        return "python"
+    }
+}

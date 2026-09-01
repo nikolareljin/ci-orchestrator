@@ -21,7 +21,7 @@ permissions:
 jobs:
   auto_tag:
     if: github.event_name == 'push'
-    uses: nikolareljin/ci-helpers/.github/workflows/auto-tag.yml@0.21.2
+    uses: nikolareljin/ci-helpers/.github/workflows/auto-tag.yml@production
     with:
       default_branch: main
       update_production_tag: false

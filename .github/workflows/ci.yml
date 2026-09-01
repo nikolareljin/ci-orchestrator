@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   gradle:
-    uses: nikolareljin/ci-helpers/.github/workflows/java-gradle.yml@0.21.2
+    uses: nikolareljin/ci-helpers/.github/workflows/java-gradle.yml@production
     with:
       java_version: '21'
       lint_command: './gradlew :tests:unit:check -x test'

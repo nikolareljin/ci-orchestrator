@@ -1,3 +1,3 @@
 def call(Map args = [:]) {
-    ciorch(args + [adapter: 'csharp'])
+    ciorch(args + [adapter: 'csharp', matrix: 'csharp-standard'])
 }

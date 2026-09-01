@@ -267,8 +267,8 @@ class CppAdapterTest extends Specification {
         then:
         result == true
         capturedCmd == "cmake --build build --config Release --parallel 8"
-        configureRan == false
-        adapter.getArtifacts().isEmpty()
+        configureRan == true
+        adapter.getArtifacts() == ["build/"]
     }
 
     def "build() uses explicit artifacts for custom build_command"() {

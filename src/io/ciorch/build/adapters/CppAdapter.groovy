@@ -90,7 +90,7 @@ class CppAdapter implements BuildAdapter {
         String buildCmd = buildConfig.build_command ?: config?.buildCommand ?: defaultBuildCmd
         artifacts = []
 
-        if (buildCmd == defaultBuildCmd) {
+        if (isBuildDirectoryCommand(buildCmd, defaultBuildCmd)) {
             // Configure step: pass -G Ninja when ninja was detected in prepare()
             String generatorFlag = (buildBackend == "ninja") ? " -G Ninja" : ""
             def configureResult = system.run_command(
@@ -119,7 +119,10 @@ class CppAdapter implements BuildAdapter {
             return configuredArtifacts
         }
 
-        return (buildCmd == defaultBuildCmd) ? ["build/"] : []
+        return isBuildDirectoryCommand(buildCmd, defaultBuildCmd) ? ["build/"] : []
+    }
+    private boolean isBuildDirectoryCommand(String buildCmd, String defaultBuildCmd) {
+        return buildCmd == defaultBuildCmd || buildCmd ==~ /^cmake\s+--build\s+build(?:\s|$).*/
     }
 
     private List<String> normalizeArtifacts(def configuredArtifacts) {

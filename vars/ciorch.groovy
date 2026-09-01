@@ -35,6 +35,13 @@ def call(Map args = [:]) {
         config.buildAdapter = args.adapter as String
     }
 
+    // Preset vars provide a matching matrix unless ciorch.yml explicitly selects one.
+    // This keeps a repository's branching.strategy override authoritative.
+    Map configuredBranching = (config.raw?.ciorch?.branching ?: [:]) as Map
+    if (args.matrix && !configuredBranching.strategy) {
+        config.branchingStrategy = args.matrix as String
+    }
+
     // Apply per-run command and version overrides from args (e.g. from ciorch_node(lint_command: ...))
     if (args.lint_command)  config.lintCommand  = args.lint_command  as String
     if (args.test_command)  config.testCommand  = args.test_command  as String

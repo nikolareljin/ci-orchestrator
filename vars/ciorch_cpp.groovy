@@ -1,3 +1,3 @@
 def call(Map args = [:]) {
-    ciorch(args + [adapter: 'cpp'])
+    ciorch(args + [adapter: 'cpp', matrix: 'cpp-standard'])
 }

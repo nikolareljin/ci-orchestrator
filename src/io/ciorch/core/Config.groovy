@@ -21,7 +21,7 @@ class Config implements Serializable {
     Map deployEnvironments = [:]    // environment name → {host, user, path}
 
     // Branching
-    String branchingStrategy = "default-gitflow"  // default-gitflow|github-flow|trunk-based|custom
+    String branchingStrategy = "default-gitflow"  // default-gitflow|github-flow|trunk-based|custom|<language>-standard
     String customMatrixPath = ""
 
     // Notifications

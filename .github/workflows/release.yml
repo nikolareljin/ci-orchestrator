@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Missing release tag to create, for example 0.2.0'
+        required: true
+        type: string
+      target_sha:
+        description: 'Merged main commit to tag'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  auto_tag:
+    if: github.event_name == 'push'
+    uses: nikolareljin/ci-helpers/.github/workflows/auto-tag.yml@0.21.2
+    with:
+      default_branch: main
+      update_production_tag: false
+
+  backfill_tag:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Verify and create missing release tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z]+)*$ ]]; then
+            echo "::error::release_tag must be a semantic version, optionally prefixed with v."
+            exit 1
+          fi
+          git rev-parse --verify "${TARGET_SHA}^{commit}"
+          git merge-base --is-ancestor "$TARGET_SHA" "origin/main"
+          if git rev-parse --verify --quiet "refs/tags/$RELEASE_TAG" >/dev/null; then
+            echo "::error::Tag $RELEASE_TAG already exists."
+            exit 1
+          fi
+          git tag -a "$RELEASE_TAG" "$TARGET_SHA" -m "Release $RELEASE_TAG"
+          git push origin "refs/tags/$RELEASE_TAG"
